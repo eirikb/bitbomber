@@ -4,34 +4,21 @@
  * @constructur
  * @return {Game}
  */
-Game= function() {
-    this.bodies = [];
+Game = function(width, height) {
+    this.world = new OGE.World(width, height);
+    this.bombs = [];
+    this.fires = [];
 
-    /**
-     * Add a body to game
-     *
-     * @param {OGE.Body} body Body to add
-     */
+    var self = this;
+
     this.addBody = function(body) {
-        for (var i = 0; i < this.bodies.length; i++) {
-            if (this.bodies[i] === body) {
-                return;
-            }
+        self.world.addBody(body);
+        if (body instanceof Bomb) {
+            bombs.push(bomb);
         }
-        this.bodies.push(body);
     };
 
-    /**
-     * Remove body from game
-     *
-     * @param {OGE.Body} body Body to remove
-     */
     this.removeBody = function(body) {
-        for (var i = 0; i < this.bodies.length; i++) {
-            if (this.bodies[i] === body) {
-                this.bodies.splice(i, 1);
-                break;
-            }
-        }
+        world.removeBody(body);
     };
 };

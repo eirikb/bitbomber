@@ -4,8 +4,13 @@ DIST_DIR = dist
 JASMINE_DIR = ${LIB_DIR}/jasmine
 OGE_DIR = ${LIB_DIR}/oge
 
-BASE_FILES = ${SRC_DIR}/game.js\
-			 ${SRC_DIR}/player.js
+BASE_FILES = ${SRC_DIR}/base.js\
+			 ${SRC_DIR}/game.js\
+			 ${SRC_DIR}/player.js\
+			 ${SRC_DIR}/box.js\
+			 ${SRC_DIR}/bomb.js\
+			 ${SRC_DIR}/fire.js\
+			 ${SRC_DIR}/powerup.js
 JSLINT4JAVA = ${LIB_DIR}/jslint4java-1.4.6.jar
 CLOSURE_COMPILER = ${LIB_DIR}/compiler.jar
 BUNDLE_VERSION = ${DIST_DIR}/bomberman.js

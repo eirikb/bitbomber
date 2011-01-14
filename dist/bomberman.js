@@ -42,23 +42,58 @@ Object.construct_prototype = function(o) {
  * @return {Game}
  */
 Game = function(width, height) {
-    this.world = new OGE.World(width, height);
-    this.bombs = [];
-    this.fires = [];
+	this.world = new OGE.World(width, height);
+	this.players = [];
+	this.bombs = [];
+	this.fires = [];
+	this.blocks = [];
+	this.bricks = [];
 
-    var self = this;
+	var self = this;
 
-    this.addBody = function(body) {
-        self.world.addBody(body);
-        if (body instanceof Bomb) {
-            bombs.push(bomb);
-        }
-    };
+	this.addBody = function(body) {
+		self.world.addBody(body);
+		if (body instanceof Player) {
+			self.players.push(body);
+		} else if (body instanceof Bomb) {
+			self.bombs.push(bomb);
+		}
+	};
 
-    this.removeBody = function(body) {
-        world.removeBody(body);
-    };
+	this.removeBody = function(body) {
+		world.removeBody(body);
+	};
+
+	this.createBlocks = function(size) {
+		for (var y = 1; y < self.world.height / size - 2; y += 2) {
+			for (var x = 1; x < self.world.width / size - 2; x += 2) {
+				var b = new Box(x * size, y * size, size, size);
+				b.armor = 1;
+				self.blocks.push(b);
+				self.addBody(b);
+			}
+		}
+		return self;
+	};
+
+	this.createBricks = function(size, percentage) {
+		var w = self.world.width / size;
+		var h = self.world.height / size;
+		for (var y = 0; y < h; y++) {
+			for (var x = 0; x < w; x++) {
+				if (Math.random() * 100 < percentage && ! (x % 2 === 1 && y % 2 === 1)) {
+					if ((x > 1 || y > 1) && (x > 1 || y < h - 2) && (x < w - 2 || y > 1) && (x < w - 2 || y < h - 2)) {
+						var c = new Box(x * size, y * size, size, size);
+						self.bricks.push(c);
+						self.addBody(c);
+					}
+				}
+			}
+		}
+		return self;
+	};
 };
+
 /**
  * Player object
  *
@@ -71,6 +106,7 @@ Player = function(x, y, width, height, nick) {
     if (arguments.length === 1) {
         this.nick = arguments[0];
     }
+    this.speed = 1;
     this.slide = true;
     this.bombSize = 1;
     this.bombPower =1;

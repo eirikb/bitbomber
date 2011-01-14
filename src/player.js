@@ -10,6 +10,7 @@ Player = function(x, y, width, height, nick) {
     if (arguments.length === 1) {
         this.nick = arguments[0];
     }
+    this.speed = 1;
     this.slide = true;
     this.bombSize = 1;
     this.bombPower =1;

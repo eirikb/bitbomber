@@ -23,6 +23,7 @@ lint:
 update: 
 	$(call clone_or_pull, ${JASMINE_DIR}, https://github.com/pivotal/jasmine.git)
 	$(call clone_or_pull, ${OGE_DIR}, https://github.com/eirikb/oge.git)
+	$(call clone_or_pull, ${OGE_DIR}, https://github.com/cloudhead/node-static.git)
 
 build: 
 	cat ${OGE_DIR}/dist/oge.js > ${BUNDLE_VERSION}

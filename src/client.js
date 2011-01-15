@@ -3,9 +3,10 @@ var player;
 
 $(function() {
 	var $gamePanel = $("#gamePanel");
-	$gamePanel.width(640);
-
 	var bodyImages = {};
+	var keyCode = 0;
+
+	$gamePanel.width(640);
 
 	game = new Game(640, 480).
 	createBlocks(16).
@@ -33,7 +34,8 @@ $(function() {
 	game.addBody(player, true);
 	addBody(player, "pl1");
 
-	$("body").keydown(function(e) {
+	$(document).keydown(function(e) {
+		console.log("Down: " + e.keyCode)
 		var cos = 0,
 		sin = 0;
 		switch (e.keyCode) {
@@ -50,10 +52,16 @@ $(function() {
 			sin = 1;
 			break;
 		}
-		player.direction = new OGE.Direction(cos, sin);
-		return false;
+		if (cos !== 0 || sin !== 0) {
+			keyCode = e.keyCode;
+			player.direction = new OGE.Direction(cos, sin);
+			return false;
+		}
 	}).keyup(function(e) {
-		player.direction = null;
+		if (e.keyCode === keyCode) {
+			console.log("Up: " + e.keyCode);
+			player.direction = null;
+		}
 	});
 
 	//player.onCollision(function(body) {

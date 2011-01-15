@@ -5,7 +5,8 @@
  * @return {Powerup}
  */
 Powerup = function(x, y, width, height) {
-    OGE.Body.apply(this, arguments);
+	OGE.Body.apply(this, arguments);
 };
 
 Powerup.prototype = Object.construct_prototype(OGE.Body);
+

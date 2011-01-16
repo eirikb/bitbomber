@@ -1,9 +1,9 @@
 var http = require('http'),
-sys = require('sys'),
 nodeStatic = require('../lib/node-static/lib/node-static'),
-faye = require('../lib/faye-node'),
+c = require('commons'),
 url = require('url'),
-lobby = require('lobby'),
+lobbyhandler = require('lobbyhandler'),
+gamehandler = require('gamehandler'),
 _ = require('../shared/underscore-min'),
 fs = require('fs');
 
@@ -25,7 +25,7 @@ function Bomberman(port) {
 			var location = url.parse(request.url, true),
 			params = (location.query || request.headers);
 			if (location.pathname === '/lobby') {
-				lobby.lobby(response, params);
+				lobbyhandler.incoming(response, params);
 			} else {
 				publicFiles.serve(request, response, function(e, res) {
 					if (e && (e.status === 404)) {
@@ -36,14 +36,9 @@ function Bomberman(port) {
 		});
 	});
 
-	var bayeux = new faye.NodeAdapter({
-		mount: '/faye',
-		timeout: 45
-	});
-	bayeux.attach(server);
 	server.listen(port);
-
-	sys.log('Server running on port ' + port);
+	gamehandler.setServer(server);
+	c.log('Server running on port ' + port);
 };
 
 module.exports = Bomberman;

@@ -23,10 +23,21 @@ exports.jsonEnd = function(response, obj)  {
 	response.end(JSON.stringify(obj));
 };
 
-exports.error = function(code, msg) {
+exports.error = function(cmd, code, msg) {
 	return {
-		error: msg,
-		code: code
+		cmd: cmd,
+		result: 'ERROR',
+		code: code,
+		msg: msg
+	};
+};
+
+exports.success = function(cmd, data, msg) {
+	return {
+		cmd: cmd,
+		result: 'OK',
+		data: data,
+		msg: msg
 	};
 };
 

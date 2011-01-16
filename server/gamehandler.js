@@ -19,40 +19,83 @@ exports.playerLogout = function(player) {
 	}
 };
 
-exports.createGame = function(player, params) {
-	if (!c.isSet(games[params.name])) {
+exports.createGame = function(player, name) {
+    var cmd = 'createGame';
+	if (!c.isSet(games[name])) {
 		var game = new Game(640, 480);
-		game.name = params.name;
-		games[params.name] = game;
+		game.name = name;
+		games[name] = game;
 		playerGames[player] = game;
 		game.addBody(player);
-		c.log('Player ' + player.nick + ' created game ' + params.name);
-		return game;
+		c.log('Player ' + player.nick + ' created game ' + name);
+        return c.success(cmd, game);
 	} else {
-		return c.error(1, 'NAME TAKEN');
+		return c.error(cmd, 1, 'NAME TAKEN');
 	}
 };
 
-exports.joinGame = function(player, params) {
-	var g = games[params.name];
+exports.joinGame = function(player, name) {
+    var cmd = 'joinGame';
+	var g = games[name];
 	if (c.isSet(g)) {
 		if (g.addBody(player)) {
-			c.log('Player ' + player.nick + ' join game ' + params.name);
-			return g;
+			c.log('Player ' + player.nick + ' join game ' + name);
+            return c.success(cmd, g);
 		} else {
-			console.log("lol")
-			c.log('Player ' + player.nick + ' unable to join game ' + params.name);
-			return c.error(2, 'GAME CLOSED');
+			c.log('Player ' + player.nick + ' unable to join game ' + name);
+			return c.error(cmd, 2, 'GAME CLOSED');
 		}
 	} else {
-		return c.error(1, 'UNKOWN GAME');
+		return c.error(cmd, 1, 'UNKOWN GAME');
 	}
+};
+
+exports.getGames = function() {
+    var cmd = 'getGame';
+	var ret = [];
+	_.each(games, function(g) {
+		ret.push(g.name);
+	});
+    return c.success(cmd, ret);
 };
 
 var sendAll = function(game, msg) {
 	_.each(game.players, function(player) {
 		playerClients[player.nick].send(msg);
 	});
+};
+
+var authPlayer = function(client, guid) {
+    var cmd = 'authPlayer';
+	var player = lobbyhandler.getPlayerByGuid(guid);
+	if (c.isSet(player)) {
+		playerClients[player.nick] = client;
+		sessionPlayers[client.sessionId] = player;
+        client.send(c.success(cmd, player));
+	} else {
+		client.send(c.error(cmd, 0, 'UNKOWN GUID'));
+	}
+
+};
+
+var startGame = function(client, player, game) {
+    var cmd = 'startGame';
+	if (c.isSet(game) && game.owner === player) {
+		c.log('IO: ' + player.nick + ' STARTED GAME');
+        sendAll(game, c.success(cmd));
+	} else {
+		c.log('IO: ' + player.nick + ' TRIED TO START GAME');
+		client.send(c.error(cmd, 0, 'NOT OWNER'));
+	};
+};
+
+var bounce = function(player, game, msg) {
+	if (c.isSet(player) && c.isSet(game)) {
+		sendAll(game, _.extend({
+			player: player.nick
+		},
+		msg));
+	};
 };
 
 exports.setServer = function(server) {
@@ -65,35 +108,16 @@ exports.setServer = function(server) {
 			var p = sessionPlayers[client.sessionId];
 			var g = playerGames[p];
 			switch (msg.cmd) {
-			case 'auth':
-				p = lobbyhandler.getPlayerByGuid(msg.guid);
-				if (c.isSet(p)) {
-					playerClients[p.nick] = client;
-					sessionPlayers[client.sessionId] = p;
-					client.send('OK');
-				} else {
-					client.send(c.error(0, 'UNKOWN GUID'));
-				}
+			case 'authPlayer':
+				authPlayer(client, msg.data.guid);
 				break;
-			case 'start':
-				if (c.isSet(g) && g.owner === p) {
-					c.log('IO: ' + p.nick + ' STARTED GAME');
-					sendAll(g, {
-						cmd: 'start'
-					});
-				} else {
-					c.log('IO: ' + p.nick + ' TRIED TO START GAME');
-					client.send(c.error(0, 'NOT OWNER'));
-				};
+			case 'startGame':
+				startGame(client, p, g);
 				break;
-            case 'endmove':
-			case 'startmove':
-				if (c.isSet(p) && c.isSet(g)) {
-					sendAll(g, _.extend({
-						player: p.nick
-					},
-					msg));
-				};
+			case 'endMove':
+			case 'startMove':
+				bounce(p, g, msg);
+				break;
 			default:
 				c.log('IO: Unkown command ' + msg.cmd);
 				break;

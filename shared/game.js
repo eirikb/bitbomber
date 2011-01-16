@@ -23,7 +23,7 @@ Game = function(width, height) {
 		if (body instanceof Player) {
             if (self.players.length == self.maxPlayers) {
                 return false;
-            } else if (self.players.length == 0) {
+            } else if (self.players.length === 0) {
                 self.owner = body;
             }
 			self.players.push(body);

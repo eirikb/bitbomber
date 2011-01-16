@@ -1,8 +1,15 @@
-#gamePanel {
+#content {
     margin-left: auto;
     margin-right: auto;
     position: relative;
+    width: 640px;
 }
 .body {
     position: absolute;
+}
+#gamePanel {
+    display: none;
+}
+#lobbyPanel {
+    display: none;
 }

@@ -3,21 +3,26 @@
     <head>
         <meta charset=utf-8 />
         <title>Bomberman Visual test</title>
-        <style>
-            #gamePanel {
-                margin-left: auto;
-                margin-right: auto;
-                position: relative;
-            }
-            .body {
-                position: absolute;
-            }
-        </style>
+        <link rel="stylesheet" type="text/css" href="css/bomberman.css" />
         <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"></script>
+        <script type="text/javascript" src="http://cdn.socket.io/stable/socket.io.js"></script>
+        <script type="text/javascript" src="underscore-min.js"></script>
         <script type="text/javascript" src="bomberman.min.js"></script>
         <script type="text/javascript" src="js/client.js"></script>
     </head>
     <body>
-        <div id="gamePanel"></div>
+        <div id="content">
+            <div id="loginPanel">
+                <label for="nickField">Nick:</label>
+                <input id="nickField" /> 
+                <span></span>
+            </div>
+            <div id="lobbyPanel">
+                <ul id="gameList"></ul>
+                <label for="gameField">Create game:</label>
+                <input id="gameField" />
+            </div>
+            <div id="gamePanel"></div>
+        </div>
     </body>
 </html>

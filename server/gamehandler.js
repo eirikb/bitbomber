@@ -1,9 +1,12 @@
 var lobbyhandler = require('lobbyhandler'),
 c = require('commons'),
-io = require('../lib/socket.io/lib/socket.io');
+io = require('../lib/socket.io/lib/socket.io'),
+_ = require('../shared/underscore-min');
 
 var playerGames = {};
 var games = {};
+var sessionPlayers = {};
+var playerClients = {};
 
 exports.playerLogout = function(player) {
 	var g = playerGames[player];
@@ -37,12 +40,19 @@ exports.joinGame = function(player, params) {
 			c.log('Player ' + player.nick + ' join game ' + params.name);
 			return g;
 		} else {
+			console.log("lol")
 			c.log('Player ' + player.nick + ' unable to join game ' + params.name);
 			return c.error(2, 'GAME CLOSED');
 		}
 	} else {
 		return c.error(1, 'UNKOWN GAME');
 	}
+};
+
+var sendAll = function(game, msg) {
+	_.each(game.players, function(player) {
+		playerClients[player.nick].send(msg);
+	});
 };
 
 exports.setServer = function(server) {
@@ -52,20 +62,40 @@ exports.setServer = function(server) {
 
 	socket.on('connection', function(client) {
 		client.on('message', function(msg) {
-			var p = lobbyhandler.getPlayerByGuid(msg.guid);
+			var p = sessionPlayers[client.sessionId];
 			var g = playerGames[p];
 			switch (msg.cmd) {
+			case 'auth':
+				p = lobbyhandler.getPlayerByGuid(msg.guid);
+				if (c.isSet(p)) {
+					playerClients[p.nick] = client;
+					sessionPlayers[client.sessionId] = p;
+					client.send('OK');
+				} else {
+					client.send(c.error(0, 'UNKOWN GUID'));
+				}
+				break;
 			case 'start':
 				if (c.isSet(g) && g.owner === p) {
 					c.log('IO: ' + p.nick + ' STARTED GAME');
-					client.send('OK');
+					sendAll(g, {
+						cmd: 'start'
+					});
 				} else {
 					c.log('IO: ' + p.nick + ' TRIED TO START GAME');
 					client.send(c.error(0, 'NOT OWNER'));
 				};
 				break;
+            case 'endmove':
+			case 'startmove':
+				if (c.isSet(p) && c.isSet(g)) {
+					sendAll(g, _.extend({
+						player: p.nick
+					},
+					msg));
+				};
 			default:
-				c.log('IO: Unkown command ' + message.data.cmd);
+				c.log('IO: Unkown command ' + msg.cmd);
 				break;
 			}
 		});

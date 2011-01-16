@@ -1,4 +1,4 @@
-var player1, player2, client1, client2;
+var player1, player2, client1, client2, onMsg1, onMsg2;
 
 $(function() {
 	asyncTest('create first player', function() {
@@ -17,6 +17,42 @@ $(function() {
 		});
 	});
 
+	asyncTest('auth client1', function() {
+		client1 = new io.Socket();
+		client1.connect();
+		onMsg1 = function(msg) {
+			equals(msg, 'OK');
+			start();
+		};
+		client1.on('connect', function() {
+			client1.send({
+				guid: player1.guid,
+				cmd: 'auth',
+			});
+		});
+		client1.on('message', function(msg) {
+			onMsg1(msg);
+		});
+	});
+
+	asyncTest('auth client2', function() {
+		client2 = new io.Socket();
+		client2.connect();
+		onMsg2 = function(msg) {
+			equals(msg, 'OK');
+			start();
+		};
+		client2.on('connect', function() {
+			client2.send({
+				guid: player2.guid,
+				cmd: 'auth',
+			});
+		});
+		client2.on('message', function(msg) {
+			onMsg2(msg);
+		});
+	});
+
 	asyncTest('create game', function() {
 		$.getJSON('/lobby?cmd=create&guid=' + player1.guid + '&name=gametest', function(data) {
 			equal(data.players[0].nick, player1.nick);
@@ -26,38 +62,52 @@ $(function() {
 
 	asyncTest('join game', function() {
 		$.getJSON('/lobby?cmd=join&guid=' + player2.guid + '&name=gametest', function(data) {
+			equal(data.players[0].nick, player1.nick);
 			equal(data.players[1].nick, player2.nick);
 			start();
 		});
 	});
 
 	asyncTest('start game fail (not owner)', function() {
-		client2 = new io.Socket();
-		client2.connect();
-		client2.on('connect', function() {
-			client2.send({
-				guid: player2.guid,
-				cmd: 'start'
-			});
-		});
-		client2.on('message', function(msg) {
-			equals(msg.code, 0);
+		onMsg2 = function(msg) {
+			equal(msg.code, 0);
 			start();
+		};
+		client2.send({
+			cmd: 'start'
 		});
 	});
 
-	asyncTest('start game success', function() {
-		client1 = new io.Socket();
-		client1.connect();
-		client1.on('connect', function() {
-			client1.send({
-				guid: player1.guid,
-				cmd: 'start'
-			});
+	asyncTest('start game works', function() {
+		var count = 0;
+		onMsg2 = function(msg) {
+			equal(msg.cmd, 'start');
+			if (++count == 2) {
+				start();
+			}
+		};
+		onMsg1 = function(msg) {
+			equal(msg.cmd, 'start');
+			if (++count == 2) {
+				start();
+			}
+		};
+		client1.send({
+			cmd: 'start'
 		});
-		client1.on('message', function(msg) {
-            equals(msg, 'OK');
+	});
+
+	asyncTest('start moving', function() {
+		onMsg1 = function(msg) {
+			console.log(msg);
+		};
+		onMsg2 = function(msg) {
+			console.log(msg);
 			start();
+		};
+		client2.send({
+			cmd: 'move',
+			direction: new OGE.Direction(1, 0)
 		});
 	});
 

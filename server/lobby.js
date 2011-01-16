@@ -3,6 +3,7 @@ c = require('commons');
 
 var playerNicks = {};
 var playerGuids = {};
+var playerGames = {};
 var games = {};
 
 var logPlayer = function(guid, action) {
@@ -47,10 +48,18 @@ exports.lobby = function(response, params) {
 	case 'logout':
 		var p = playerGuids[params.guid];
 		if (c.isSet(p)) {
-			delete playerNicks[p.nick];
-			delete playerGuids[p.guid];
-			res = 'OK';
 			logPlayer(params.guid, 'logged out');
+            var g = playerGames[params.guid];
+            if (c.isSet(g)) {
+                g.removeBody(p);
+                if (g.players.length == 0) {
+                    c.log('Game deleted ' + g.name);
+                    delete games[g.name];
+                }
+            }
+			delete playerNicks[p.nick];
+			delete playerGuids[params.guid];
+			res = 'OK';
 		} else {
 			res = error(0, 'UNKOWN PLAYER');
 		}
@@ -60,7 +69,9 @@ exports.lobby = function(response, params) {
 		if (c.isSet(p)) {
 			if (c.isSet(params.name) && ! c.isSet(games[params.name])) {
 				var game = new Game(640, 480);
+                game.name = params.name;
 				games[params.name] = game;
+				playerGames[params.guid] = game;
 				game.addBody(p);
 				res = game;
 				logPlayer(params.guid, 'created game ' + params.name);

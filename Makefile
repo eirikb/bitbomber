@@ -5,6 +5,7 @@ JASMINE_DIR = ${LIB_DIR}/jasmine
 OGE_DIR = ${LIB_DIR}/oge
 NODE_STATIC_DIR = ${LIB_DIR}/node-static
 QUNIT_DIR = ${LIB_DIR}/qunit
+UNDERSCORE_DIR = ${LIB_DIR}/underscore
 
 BASE_FILES = ${SHARED_DIR}/base.js\
 			 ${SHARED_DIR}/player.js\
@@ -28,9 +29,11 @@ update:
 	$(call clone_or_pull, ${OGE_DIR}, https://github.com/eirikb/oge.git)
 	$(call clone_or_pull, ${NODE_STATIC_DIR}, https://github.com/cloudhead/node-static.git)
 	$(call clone_or_pull, ${QUNIT_DIR}, https://github.com/jquery/qunit.git)
+	$(call clone_or_pull, ${UNDERSCORE_DIR}, https://github.com/documentcloud/underscore.git)
 	cp ${OGE_DIR}/dist/oge.js ${SHARED_DIR}/
 	cp ${QUNIT_DIR}/qunit/qunit.js ${PUBLIC_DIR}/js/
 	cp ${QUNIT_DIR}/qunit/qunit.css ${PUBLIC_DIR}/css/
+	cp ${UNDERSCORE_DIR}/underscore-min.js ${SHARED_DIR}/
 
 build: 
 	cat ${OGE_DIR}/dist/oge.js > ${BUNDLE_VERSION}

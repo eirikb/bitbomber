@@ -24,7 +24,11 @@ Game = function(width, height) {
 	};
 
 	this.removeBody = function(body) {
-		world.removeBody(body);
+		self.world.removeBody(body);
+        self.players = _.without(self.players, body);
+        self.bombs = _.without(self.bombs, body);
+        self.blocks = _.without(self.blocks, body);
+        self.bricks = _.without(self.bricks, body);
 	};
 
 	this.createBlocks = function(size) {

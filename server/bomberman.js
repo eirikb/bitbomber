@@ -4,6 +4,7 @@ nodeStatic = require('../lib/node-static/lib/node-static'),
 faye = require('../lib/faye-node'),
 url = require('url'),
 lobby = require('lobby'),
+_ = require('../shared/underscore-min'),
 fs = require('fs');
 
 function Bomberman(port) {

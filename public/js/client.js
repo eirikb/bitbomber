@@ -2,7 +2,11 @@ var game;
 var player;
 
 $(function() {
-	var $gamePanel = $("#gamePanel");
+	var $gamePanel = $('#gamePanel');
+	$.getJSON('/lobby?command=join&nick=eirikb', function(data) {
+		console.log(data);
+	});
+	/*
 	var bodyImages = {};
 	var keyCode = 0;
 
@@ -35,7 +39,6 @@ $(function() {
 	addBody(player, "pl1");
 
 	$(document).keydown(function(e) {
-		console.log("Down: " + e.keyCode)
 		var cos = 0,
 		sin = 0;
 		switch (e.keyCode) {
@@ -59,24 +62,20 @@ $(function() {
 		}
 	}).keyup(function(e) {
 		if (e.keyCode === keyCode) {
-			console.log("Up: " + e.keyCode);
 			player.direction = null;
 		}
 	});
 
-	//player.onCollision(function(body) {
-	//       console.log(body);
-	//      });
 	var step = function() {
 		game.world.step();
 		$.each(game.players, function(i, player) {
 			var $img = bodyImages[player];
-			$img.css("left", player.x).css("top", player.y);
+			$img.css("left", player.x).css("top", player.y - 4);
 		});
 		setTimeout(step, 10);
 	};
 
 	step();
-
+*/
 });
 

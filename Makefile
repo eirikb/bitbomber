@@ -1,8 +1,10 @@
 LIB_DIR = lib
 SHARED_DIR = shared
+PUBLIC_DIR = public
 JASMINE_DIR = ${LIB_DIR}/jasmine
 OGE_DIR = ${LIB_DIR}/oge
 NODE_STATIC_DIR = ${LIB_DIR}/node-static
+QUNIT_DIR = ${LIB_DIR}/qunit
 
 BASE_FILES = ${SHARED_DIR}/base.js\
 			 ${SHARED_DIR}/player.js\
@@ -25,6 +27,10 @@ update:
 	$(call clone_or_pull, ${JASMINE_DIR}, https://github.com/pivotal/jasmine.git)
 	$(call clone_or_pull, ${OGE_DIR}, https://github.com/eirikb/oge.git)
 	$(call clone_or_pull, ${NODE_STATIC_DIR}, https://github.com/cloudhead/node-static.git)
+	$(call clone_or_pull, ${QUNIT_DIR}, https://github.com/jquery/qunit.git)
+	cp ${OGE_DIR}/dist/oge.js ${SHARED_DIR}/
+	cp ${QUNIT_DIR}/qunit/qunit.js ${PUBLIC_DIR}/js/
+	cp ${QUNIT_DIR}/qunit/qunit.css ${PUBLIC_DIR}/css/
 
 build: 
 	cat ${OGE_DIR}/dist/oge.js > ${BUNDLE_VERSION}

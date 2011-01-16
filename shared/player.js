@@ -5,11 +5,12 @@
  * @return {Player}
  */
 Player = function(x, y, width, height, nick) {
-	OGE.Body.apply(this, arguments);
 	this.nick = nick;
 	if (arguments.length === 1) {
 		this.nick = arguments[0];
+        x = 0;
 	}
+    OGE.Body.apply(this, arguments);
 	this.speed = 1;
 	this.slide = true;
 	this.bombSize = 1;

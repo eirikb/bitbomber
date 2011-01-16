@@ -49,14 +49,14 @@ exports.lobby = function(response, params) {
 		var p = playerGuids[params.guid];
 		if (c.isSet(p)) {
 			logPlayer(params.guid, 'logged out');
-            var g = playerGames[params.guid];
-            if (c.isSet(g)) {
-                g.removeBody(p);
-                if (g.players.length == 0) {
-                    c.log('Game deleted ' + g.name);
-                    delete games[g.name];
-                }
-            }
+			var g = playerGames[params.guid];
+			if (c.isSet(g)) {
+				g.removeBody(p);
+				if (g.players.length == 0) {
+					c.log('Game deleted ' + g.name);
+					delete games[g.name];
+				}
+			}
 			delete playerNicks[p.nick];
 			delete playerGuids[params.guid];
 			res = 'OK';
@@ -69,7 +69,7 @@ exports.lobby = function(response, params) {
 		if (c.isSet(p)) {
 			if (c.isSet(params.name) && ! c.isSet(games[params.name])) {
 				var game = new Game(640, 480);
-                game.name = params.name;
+				game.name = params.name;
 				games[params.name] = game;
 				playerGames[params.guid] = game;
 				game.addBody(p);
@@ -80,6 +80,20 @@ exports.lobby = function(response, params) {
 			}
 		} else {
 			res = error(0, 'UNKNOWN PLAYER');
+		}
+		break;
+	case 'join':
+		var p = playerGuids[params.guid];
+		var g = games[params.name];
+		if (c.isSet(p)) {
+			if (c.isSet(g)) {
+				res = g.addBody(p) ? g: error(2, 'GAME CLOSED');
+                c.log(params.guid, 'joing game ' + params.name);
+			} else {
+				res = error(1, 'UNKOWN GAME');
+			}
+		} else {
+			res = error(0, 'UNKNOWN PLAYER'); 
 		}
 		break;
 	default:

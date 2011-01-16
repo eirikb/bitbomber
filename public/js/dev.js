@@ -67,6 +67,27 @@ $(function() {
 		});
 	});
 
+	asyncTest('join game fail', function() {
+		$.getJSON('/lobby?cmd=join&guid=7&name=omg', function(data) {
+            equal(data.code, 0);
+			start();
+		});
+	});
+
+	asyncTest('join game fail again', function() {
+		$.getJSON('/lobby?cmd=join&guid=' + player.guid + '&name=7', function(data) {
+            equal(data.code, 1);
+			start();
+		});
+	});
+
+	asyncTest('join game', function() {
+		$.getJSON('/lobby?cmd=join&guid=' + player.guid + '&name=omg', function(data) {
+            equal(data.players[0].nick, 'eirikb');
+			start();
+		});
+	});
+
 	asyncTest('logout cleanup', function() {
 		$.getJSON('/lobby?cmd=logout&guid=' + player.guid, function(data) {
 			equal(data, 'OK');

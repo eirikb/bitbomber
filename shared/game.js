@@ -12,15 +12,23 @@ Game = function(width, height) {
 	this.blocks = [];
 	this.bricks = [];
 
+    this.maxPlayers = 4;
+
 	var self = this;
 
 	this.addBody = function(body, active) {
-		self.world.addBody(body, active);
+		if (!self.world.addBody(body, active)) {
+            return false;
+        }
 		if (body instanceof Player) {
+            if (self.players.length == self.maxPlayers) {
+                return false;
+            }
 			self.players.push(body);
 		} else if (body instanceof Bomb) {
 			self.bombs.push(bomb);
 		}
+        return true;
 	};
 
 	this.removeBody = function(body) {

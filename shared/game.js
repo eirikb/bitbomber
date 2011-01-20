@@ -12,33 +12,64 @@ Game = function(width, height) {
 	this.blocks = [];
 	this.bricks = [];
 
-    this.maxPlayers = 4;
+	this.maxPlayers = 4;
 
 	var self = this;
 
 	this.addBody = function(body, active) {
 		if (!self.world.addBody(body, active)) {
-            return false;
-        }
+			return false;
+		}
 		if (body instanceof Player) {
-            if (self.players.length == self.maxPlayers) {
-                return false;
-            } else if (self.players.length === 0) {
-                self.owner = body;
-            }
+			if (self.players.length == self.maxPlayers) {
+				return false;
+			} else if (self.players.length === 0) {
+				self.owner = body;
+			}
 			self.players.push(body);
 		} else if (body instanceof Bomb) {
 			self.bombs.push(bomb);
 		}
-        return true;
+		return true;
+	};
+
+	this.serialize = function() {
+		var data = {
+			width: self.world.width,
+			height: self.world.height
+		};
+		var getPos = function(obj, size) {
+			return Math.floor(obj.y / size * self.world.width / size + obj.x / size);
+		};
+		var addBoxes = function(boxes, name) {
+			if (boxes.length > 0) {
+				data[name + 'Size'] = boxes[0].width;
+				data[name] = [];
+				_.each(boxes, function(box) {
+					data[name].push(getPos(box, boxes[0].width));
+				});
+			}
+		};
+		data.players = [];
+		_.each(self.players, function(player) {
+			data.players.push({
+				nick: player.nick,
+				x: player.x,
+				y: player.y
+			});
+		});
+
+		addBoxes(self.blocks, 'blocks');
+		addBoxes(self.bricks, 'bricks');
+		return data;
 	};
 
 	this.removeBody = function(body) {
 		self.world.removeBody(body);
-        self.players = _.without(self.players, body);
-        self.bombs = _.without(self.bombs, body);
-        self.blocks = _.without(self.blocks, body);
-        self.bricks = _.without(self.bricks, body);
+		self.players = _.without(self.players, body);
+		self.bombs = _.without(self.bombs, body);
+		self.blocks = _.without(self.blocks, body);
+		self.bricks = _.without(self.bricks, body);
 	};
 
 	this.createBlocks = function(size) {

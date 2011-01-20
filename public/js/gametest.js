@@ -59,6 +59,7 @@ $(function() {
 
 	asyncTest('create game', function() {
 		$.getJSON('/lobby?cmd=createGame&guid=' + player1.guid + '&name=gametest', function(data) {
+            console.log(data)
 			equal(data.data.players[0].nick, player1.nick);
 			start();
 		});

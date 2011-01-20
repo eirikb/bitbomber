@@ -20,27 +20,27 @@ exports.playerLogout = function(player) {
 };
 
 exports.createGame = function(player, name) {
-    var cmd = 'createGame';
+	var cmd = 'createGame';
 	if (!c.isSet(games[name])) {
-		var game = new Game(640, 480);
+		var game = new Game(640, 480).createBlocks(16).createBricks(16);
 		game.name = name;
 		games[name] = game;
 		playerGames[player] = game;
 		game.addBody(player);
 		c.log('Player ' + player.nick + ' created game ' + name);
-        return c.success(cmd, game);
+		return c.success(cmd, game.serialize());
 	} else {
 		return c.error(cmd, 1, 'NAME TAKEN');
 	}
 };
 
 exports.joinGame = function(player, name) {
-    var cmd = 'joinGame';
+	var cmd = 'joinGame';
 	var g = games[name];
 	if (c.isSet(g)) {
 		if (g.addBody(player)) {
 			c.log('Player ' + player.nick + ' join game ' + name);
-            return c.success(cmd, g);
+			return c.success(cmd, g);
 		} else {
 			c.log('Player ' + player.nick + ' unable to join game ' + name);
 			return c.error(cmd, 2, 'GAME CLOSED');
@@ -51,12 +51,12 @@ exports.joinGame = function(player, name) {
 };
 
 exports.getGames = function() {
-    var cmd = 'getGame';
+	var cmd = 'getGame';
 	var ret = [];
 	_.each(games, function(g) {
 		ret.push(g.name);
 	});
-    return c.success(cmd, ret);
+	return c.success(cmd, ret);
 };
 
 var sendAll = function(game, msg) {
@@ -66,12 +66,12 @@ var sendAll = function(game, msg) {
 };
 
 var authPlayer = function(client, guid) {
-    var cmd = 'authPlayer';
+	var cmd = 'authPlayer';
 	var player = lobbyhandler.getPlayerByGuid(guid);
 	if (c.isSet(player)) {
 		playerClients[player.nick] = client;
 		sessionPlayers[client.sessionId] = player;
-        client.send(c.success(cmd, player));
+		client.send(c.success(cmd, player));
 	} else {
 		client.send(c.error(cmd, 0, 'UNKOWN GUID'));
 	}
@@ -79,10 +79,10 @@ var authPlayer = function(client, guid) {
 };
 
 var startGame = function(client, player, game) {
-    var cmd = 'startGame';
+	var cmd = 'startGame';
 	if (c.isSet(game) && game.owner === player) {
 		c.log('IO: ' + player.nick + ' STARTED GAME');
-        sendAll(game, c.success(cmd));
+		sendAll(game, c.success(cmd));
 	} else {
 		c.log('IO: ' + player.nick + ' TRIED TO START GAME');
 		client.send(c.error(cmd, 0, 'NOT OWNER'));

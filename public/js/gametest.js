@@ -70,7 +70,7 @@ $(function() {
 
 	asyncTest('create game', function() {
 		$.getJSON('/lobby?cmd=createGame&guid=' + player1.guid, function(data) {
-			equal(data.data.player.players[0].nick, player1.nick);
+			equal(data.data.players[0].nick, player1.nick);
 			g1 = Game.deserialize(data.data);
 			var guid = player1.guid;
 			player1 = g1.getPlayer(player1.nick);
@@ -95,8 +95,8 @@ $(function() {
 			player2 = g2.getPlayer(player2.nick);
 			player2.guid = guid;
 			equal(g2.players[1], player2);
-			equal(data.data.player.players[0].nick, player1.nick);
-			equal(data.data.player.players[1].nick, player2.nick);
+			equal(data.data.players[0].nick, player1.nick);
+			equal(data.data.players[1].nick, player2.nick);
 			if (++count == 2)  {
 				start();
 			}

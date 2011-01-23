@@ -4,10 +4,7 @@ LobbyClient = function() {
 	var $loginPanel = $('#loginPanel'),
 	$loginButton = $('#loginButton'),
 	$lobbyPanel = $('#lobbyPanel'),
-	$gamePanel = $('#gamePanel'),
-	$gameList = $('#gameList'),
 	$nickField = $('#nickField'),
-	$gameField = $('#gameField'),
 	$playNowButton = $('#playNowButton'),
 	$createGameButton = $('#createGameButton');
 
@@ -52,12 +49,12 @@ LobbyClient = function() {
 					if (msg.result === 'OK') {
 						showLobby();
 					} else {
-						console.log('Snap!');
+						utils.log('Snap!');
 					}
 					break;
 				}
 			} else  {
-				console.log('Error: ' + msg.cmd + ' - ' + msg.code + ' - ' + msg.msg);
+				utils.log('Error: ' + msg.cmd + ' - ' + msg.code + ' - ' + msg.msg);
 			}
 
 		});
@@ -66,25 +63,33 @@ LobbyClient = function() {
 	var showLobby = function() {
 		$loginPanel.hide();
 		$lobbyPanel.show();
-		$gameField.focus();
 	}
 
 	var createGame = function() {
-		$.getJSON('/lobby?cmd=create&guid=' + player.guid, function(data) {
-			if (typeof data.error === 'undefined') {
-				var game = _.extend(new Game(), data);
-				console.log(game);
+		$.getJSON('/lobby?cmd=createGame&guid=' + user.guid, function(data) {
+			utils.log(data);
+			if (data.result === 'OK') {
+				var game = Game.deserialize(data.data);
+				gameClient = new GameClient(game, game.getPlayer(user.nick));
+				$lobbyPanel.hide();
 			}
+		});
+	};
+
+	var playNow = function() {
+		$.getJSON('/lobby?cmd=joinGame&guid=' + user.guid, function(data) {
+			utils.log(data);
 		});
 	};
 
 	var login = function() {
 		if ($nickField.val().length > 0) {
 			$.getJSON('/lobby?cmd=loginPlayer&nick=' + $nickField.val(), function(data) {
+				utils.log(data);
 				if (data.result === 'OK') {
 					user = data.data;
 					localStorage.guid = user.guid;
-                    startClient();
+					startClient();
 					showLobby();
 				} else {
 					$loginPanel.children('span').text('Nick taken!');

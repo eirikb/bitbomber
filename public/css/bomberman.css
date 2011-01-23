@@ -13,3 +13,7 @@
 #lobbyPanel {
     display: none;
 }
+#infoArea {
+    width: 640px;
+    height: 200px;
+}

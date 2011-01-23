@@ -12,7 +12,7 @@ var loginPlayer = function(guid, nick, player) {
 	var cmd = 'loginPlayer';
 	if (!c.isSet(guid)) {
 		if (c.isSet(nick) && ! c.isSet(playerNicks[nick])) {
-			var player = new Player(nick);
+			var player = new Player(0, 0, 16, 16, nick);
 			playerNicks[player.nick] = player;
 			var guid = c.guid();
 			player.guid = guid;

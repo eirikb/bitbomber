@@ -140,9 +140,13 @@ exports.setServer = function(server) {
 			case 'startMove':
 				var cos = parseInt(msg.data.cos, 10);
 				var sin = parseInt(msg.data.sin, 10);
+				var x = parseInt(msg.data.x, 10);
+				var y = parseInt(msg.data.y, 10);
 				sendAll(g, c.success(msg.cmd, {
 					cos: cos,
 					sin: sin,
+					x: x,
+					y: y,
 					player: p.nick
 				}), p);
 				break;

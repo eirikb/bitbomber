@@ -1,22 +1,19 @@
 var gamehandler = require('gamehandler'),
-c = require('commons');
-
-var playerNicks = {};
-var playerGuids = {};
+c = require('commons'),
+b = require('bomberman');
 
 var logPlayer = function(guid, action) {
-	c.log('Player ' + action + ': ' + playerGuids[guid].nick + ' - ' + guid);
+	c.log('Player ' + action + ': ' + b.playerGuids[guid].nick + ' - ' + guid);
 };
 
-var loginPlayer = function(guid, nick, player) {
-	var cmd = 'loginPlayer';
+exports.loginPlayer = function(cmd, guid, nick, player) {
 	if (!c.isSet(guid)) {
-		if (c.isSet(nick) && ! c.isSet(playerNicks[nick])) {
+		if (c.isSet(nick) && ! c.isSet(b.playerNicks[nick])) {
 			var player = new Player(0, 0, 16, 16, nick);
-			playerNicks[player.nick] = player;
+			b.playerNicks[player.nick] = player;
 			var guid = c.guid();
 			player.guid = guid;
-			playerGuids[guid] = player;
+			b.playerGuids[guid] = player;
 			logPlayer(guid, 'created');
 			return c.success(cmd, {
 				nick: player.nick,
@@ -35,56 +32,21 @@ var loginPlayer = function(guid, nick, player) {
 	}
 };
 
-exports.logoutPlayer = function(player) {
-	if (c.isSet(playerNicks[player.nick])) {
-		logoutPlayer(player);
+exports.logoutPlayer = function(cmd, player) {
+	if (c.isSet(b.playerNicks[player.nick])) {
+		logoutPlayer(cmd, player);
 	}
 };
 
-var logoutPlayer = function(player) {
-	var cmd = 'logoutPlayer';
+var logoutPlayer = function(cmd, player) {
 	if (c.isSet(player)) {
 		logPlayer(player.guid, 'logged out');
-		gamehandler.playerLogout(player);
-		delete playerNicks[player.nick];
-		delete playerGuids[player.guid];
+		gamehandler.playerLogout(cmd, player);
+		delete b.playerNicks[player.nick];
+		delete b.playerGuids[player.guid];
 		return c.success(cmd);
 	} else {
 		return c.error(cmd, 0, 'UNKOWN PLAYER');
 	}
-};
-
-exports.getPlayerByGuid = function(guid) {
-	return playerGuids[guid];
-};
-
-exports.incoming = function(response, params) {
-	var res;
-	var p = playerGuids[params.guid];
-	switch (params.cmd) {
-	case 'loginPlayer':
-		res = loginPlayer(params.guid, params.nick, p);
-		break;
-	case 'logoutPlayer':
-		res = logoutPlayer(p);
-		break;
-	case 'createGame':
-		if (c.isSet(p)) {
-			res = gamehandler.createGame(p, params.name);
-		} else {
-			res = c.error(params.cmd, 0, 'UNKNOWN PLAYER');
-		}
-		break;
-	case 'joinGame':
-		if (c.isSet(p)) {
-			res = gamehandler.joinGame(p, params.name);
-		} else {
-			res = c.error(params.cmd, 0, 'UNKNOWN PLAYER'); 
-		}
-		break;
-	default:
-		res = c.error(params.cmd, 0, 'UNKNOWN COMMAND');
-	}
-	c.jsonEnd(response, res);
 };
 

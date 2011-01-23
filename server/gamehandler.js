@@ -1,39 +1,32 @@
 var lobbyhandler = require('lobbyhandler'),
 c = require('commons'),
-io = require('../lib/socket.io/lib/socket.io'),
-_ = require('../lib/underscore/underscore');
+_ = require('../lib/underscore/underscore'),
+b = require('bomberman');
 
-var playerGames = {};
-var games = {};
-var sessionPlayers = {};
-var playerClients = {};
-var openGames = {};
-
-exports.playerLogout = function(player) {
-	var g = playerGames[player];
+exports.playerLogout = function(cmd, player) {
+	var g = b.playerGames[player.nick];
 	if (c.isSet(g)) {
 		g.removeBody(player);
-		sendAll(g, c.success('playerLogout', {
+		sendAll(g, c.success(cmd, {
 			player: player.nick
 		}));
 		if (g.players.length == 0) {
-			delete games[g.guid];
-			delete openGames[g.guid];
+			delete b.games[g.guid];
+			delete b.openGames[g.guid];
 			c.log('Game deleted ' + g.guid);
 		}
 	}
 };
 
-exports.createGame = function(player) {
-	var cmd = 'createGame';
+exports.createGame = function(cmd, player) {
 	var guid = c.guid;
-	if (!c.isSet(games[guid])) {
+	if (!c.isSet(b.games[guid])) {
 		var game = new Game(640, 480).createBlocks(16).createBricks(16, 20);
 		var guid = c.guid();
 		game.guid = guid;
-		games[guid] = game;
-		openGames[guid] = game;
-		playerGames[player] = game;
+		b.games[guid] = game;
+		b.openGames[guid] = game;
+		b.playerGames[player.nick] = game;
 		game.addBody(player, true);
 		c.log('Player ' + player.nick + ' created game ' + guid);
 		var data = game.serialize();
@@ -43,12 +36,11 @@ exports.createGame = function(player) {
 	}
 };
 
-exports.joinGame = function(player) {
-	var cmd = 'joinGame';
-	var games = _.keys(openGames);
+exports.joinGame = function(cmd, player) {
+	var games = _.keys(b.openGames);
 	if (games.length > 0) {
 		var i = Math.floor(Math.random() * games.length);
-		var g = openGames[games[Math.floor(Math.random() * games.length)]];
+		var g = b.openGames[games[Math.floor(Math.random() * games.length)]];
 		var x = 0,
 		y = 0;
 		switch (g.players.length) {
@@ -64,6 +56,7 @@ exports.joinGame = function(player) {
 		player.x = x;
 		player.y = y;
 		if (g.addBody(player, true)) {
+            b.playerGames[player.nick] = g;
 			c.log('Player ' + player.nick + ' join game ' + g.guid);
 			sendAll(g, c.success('joinGame', {
 				player: player.serialize()
@@ -82,17 +75,16 @@ exports.joinGame = function(player) {
 var sendAll = function(game, msg, excludePlayer) {
 	_.each(game.players, function(player) {
 		if (!excludePlayer || player.nick !== excludePlayer.nick) {
-			playerClients[player.nick].send(msg);
+			b.playerClients[player.nick].send(msg);
 		}
 	});
 };
 
-var authPlayer = function(client, guid) {
-	var cmd = 'authPlayer';
-	var player = lobbyhandler.getPlayerByGuid(guid);
+exports.authPlayer = function(cmd, client, guid) {
+	var player = b.playerGuids[guid];
 	if (c.isSet(player)) {
-		playerClients[player.nick] = client;
-		sessionPlayers[client.sessionId] = player;
+		b.playerClients[player.nick] = client;
+		b.sessionPlayers[client.sessionId] = player;
 		client.send(c.success(cmd, player));
 	} else {
 		client.send(c.error(cmd, 0, 'UNKOWN GUID'));
@@ -100,10 +92,9 @@ var authPlayer = function(client, guid) {
 
 };
 
-var startGame = function(client, player, game) {
-	var cmd = 'startGame';
+exports.startGame = function(cmd, client, player, game) {
 	if (c.isSet(game) && game.owner === player) {
-		delete openGames[game.guid];
+		delete b.openGames[game.guid];
 		c.log('IO: ' + player.nick + ' STARTED GAME');
 		sendAll(game, c.success(cmd));
 	} else {
@@ -112,53 +103,27 @@ var startGame = function(client, player, game) {
 	};
 };
 
-exports.setServer = function(server) {
-	var socket = io.listen(server, {
-		flashPolicyServer: false
-	});
+exports.endMove = function(cmd, player, game, data) {
+	var x = parseInt(data.x, 10);
+	var y = parseInt(data.y, 10);
+	sendAll(game, c.success(cmd, {
+		x: x,
+		y: y,
+		player: player.nick
+	}), player);
+};
 
-	socket.on('connection', function(client) {
-		client.on('message', function(msg) {
-			var p = sessionPlayers[client.sessionId];
-			var g = playerGames[p];
-			switch (msg.cmd) {
-			case 'authPlayer':
-				authPlayer(client, msg.data.guid);
-				break;
-			case 'startGame':
-				startGame(client, p, g);
-				break;
-			case 'endMove':
-				var x = parseInt(msg.data.x, 10);
-				var y = parseInt(msg.data.y, 10);
-				sendAll(g, c.success(msg.cmd, {
-					x: x,
-					y: y,
-					player: p.nick
-				}), p);
-				break;
-			case 'startMove':
-				var cos = parseInt(msg.data.cos, 10);
-				var sin = parseInt(msg.data.sin, 10);
-				var x = parseInt(msg.data.x, 10);
-				var y = parseInt(msg.data.y, 10);
-				sendAll(g, c.success(msg.cmd, {
-					cos: cos,
-					sin: sin,
-					x: x,
-					y: y,
-					player: p.nick
-				}), p);
-				break;
-			default:
-				c.log('IO: Unkown command ' + msg.cmd);
-				break;
-			}
-		});
-		client.on('disconnect', function() {
-			var player = sessionPlayers[client.sessionId];
-			lobbyhandler.logoutPlayer(player);
-		});
-	});
+exports.startMove = function(cmd, player, game, data) {
+	var cos = parseInt(data.cos, 10);
+	var sin = parseInt(data.sin, 10);
+	var x = parseInt(data.x, 10);
+	var y = parseInt(data.y, 10);
+	sendAll(game, c.success(cmd, {
+		cos: cos,
+		sin: sin,
+		x: x,
+		y: y,
+		player: player.nick
+	}), player);
 };
 

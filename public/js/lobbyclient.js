@@ -1,5 +1,5 @@
 LobbyClient = function() {
-	var gameClient, game, user, player, client;
+	var gameClient, game, user, player;
 
 	var $loginPanel = $('#loginPanel'),
 	$loginButton = $('#loginButton'),
@@ -43,20 +43,7 @@ LobbyClient = function() {
 			}
 		});
 		client.on('message', function(msg) {
-			if (msg.result !== 'error') {
-				switch (msg.cmd) {
-				case 'authPlayer':
-					if (msg.result === 'OK') {
-						showLobby();
-					} else {
-						utils.log('Snap!');
-					}
-					break;
-				}
-			} else  {
-				utils.log('Error: ' + msg.cmd + ' - ' + msg.code + ' - ' + msg.msg);
-			}
-
+			utils.log(msg);
 		});
 	};
 
@@ -70,7 +57,7 @@ LobbyClient = function() {
 			utils.log(data);
 			if (data.result === 'OK') {
 				var game = Game.deserialize(data.data);
-				gameClient = new GameClient(game, game.getPlayer(user.nick));
+				gameClient = new GameClient(game, user.nick);
 				$lobbyPanel.hide();
 			}
 		});
@@ -79,6 +66,11 @@ LobbyClient = function() {
 	var playNow = function() {
 		$.getJSON('/lobby?cmd=joinGame&guid=' + user.guid, function(data) {
 			utils.log(data);
+			if (data.result === 'OK') {
+				var game = Game.deserialize(data.data);
+				gameClient = new GameClient(game, user.nick);
+				$lobbyPanel.hide();
+			}
 		});
 	};
 

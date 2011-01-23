@@ -83,8 +83,10 @@ $(function() {
 	asyncTest('join game', function() {
 		var count = 0;
 		onMsg1 = function(msg) {
-			g1.addBody(Player.deserialize(msg.data.player));
+			g1.addBody(Player.deserialize(msg.data.player), true);
 			equal(g1.players.length, 2);
+            equal(g1.players[1].x, g1.world.width - 16);
+            equal(g1.players[1].y, 0);
 			if (++count == 2) {
 				start();
 			}
@@ -140,9 +142,14 @@ $(function() {
 	});
 
 	asyncTest('start moving', function() {
-		onMsg1 = function(msg) {};
-		onMsg2 = function(msg) {
+		onMsg1 = function(msg) {
+        console.log(msg)
+            g1.getPlayer(msg.data.player).direction = new OGE.Direction(msg.data.cos, msg.data.sin);
+            equal(g1.players[1].direction.cos, 1);
 			start();
+		};
+		onMsg2 = function(msg) {
+			equal(0, 1);
 		};
 		client2.send({
 			cmd: 'startMove',

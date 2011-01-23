@@ -549,7 +549,7 @@ Player = function(x, y, width, height, nick) {
 		x = 0;
 	}
 	OGE.Body.apply(this, arguments);
-	this.speed = 1;
+	this.speed = 3;
 	this.slide = true;
 	this.bombSize = 1;
 	this.bombPower = 1;

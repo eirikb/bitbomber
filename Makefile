@@ -15,15 +15,17 @@ update:
 hack:
 	cd ${BOMBERMAN_CLIENT_DIR};make update
 	cd public; \
-		ln -s ${BOMBERMAN_CLIENT_DIR}/lib/qunit/qunit/qunit.* ./; \
-		ln -s ${BOMBERMAN_CLIENT_DIR}/lib/oge/dist/oge.js ./;\
-		ln -s ${BOMBERMAN_CLIENT_DIR}/lib/underscore/underscore.js ./;
+		ln -s ../${BOMBERMAN_CLIENT_DIR}/public/* ./; \
+		ln -s ../${BOMBERMAN_CLIENT_DIR}/lib/qunit/qunit/qunit.* ./; \
+		ln -s ../${BOMBERMAN_CLIENT_DIR}/lib/oge/dist/oge.js ./;\
+		ln -s ../${UNDERSCORE_DIR}/underscore.js ./;\
+		ln -s ../${BOMBERMAN_CLIENT_DIR}/src/* ./;
 devhack:
 	cd public;\
 		ln -s ../../bomberman-client/public/* ./; \
 		ln -s ../../bomberman-client/lib/qunit/qunit/qunit.* ./; \
 		ln -s ../../bomberman-client/lib/oge/dist/oge.js ./; \
-		ln -s ../../bomberman-client/lib/underscore/underscore.js ./; \
+		ln -s ../${UNDERSCORE_DIR}/underscore.js ./;\
 		ln -s ../../bomberman-client/src/* ./;
 
 define clone_or_pull

@@ -23,7 +23,7 @@ Player = function(x, y, width, height, nick) {
 Player.prototype = Object.construct_prototype(OGE.Body);
 
 Player.prototype.serialize = function() {
-	return  {
+	return {
 		nick: this.nick,
 		x: this.x,
 		y: this.y,

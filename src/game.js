@@ -36,7 +36,7 @@ Game.prototype.serialize = function() {
 	var self = this;
 	var data = {
 		width: this.world.width,
-		height: this.world.height,
+		height: this.world.height
 	};
 	var serializeboxes = function(name, attrs) {
 		if (self[name].length > 0) {
@@ -55,15 +55,9 @@ Game.prototype.serialize = function() {
 		}
 	};
 	if (this.players.length > 0) {
-		data.player = {};
-		data.player.size = this.players[0].width;
-		data.player.players = [];
+		data.players = [];
 		_.each(this.players, function(player) {
-			data.player.players.push({
-				nick: player.nick,
-				x: player.x,
-				y: player.y
-			});
+			data.players.push(player.serialize());
 		});
 	}
 
@@ -137,9 +131,11 @@ Game.deserialize = function(data) {
 	};
 	deserializeBoxes('blocks');
 	deserializeBoxes('bricks');
-	_.each(data.player.players, function(p) {
-		game.addBody(new Player(p.x, p.y, data.player.size, data.player.size, p.nick), true);
-	});
+	if (data.players && data.players.length > 0) {
+		_.each(data.players, function(p) {
+			game.addBody(Player.deserialize(p), true);
+		});
+	}
 	return game;
 };
 

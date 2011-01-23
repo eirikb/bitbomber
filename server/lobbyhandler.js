@@ -15,6 +15,7 @@ var loginPlayer = function(guid, nick, player) {
 			var player = new Player(nick);
 			playerNicks[player.nick] = player;
 			var guid = c.guid();
+			player.guid = guid;
 			playerGuids[guid] = player;
 			logPlayer(guid, 'created');
 			return c.success(cmd, {
@@ -34,13 +35,19 @@ var loginPlayer = function(guid, nick, player) {
 	}
 };
 
-var logoutPlayer = function(guid, player) {
+exports.logoutPlayer = function(player) {
+	if (c.isSet(playerNicks[player.nick])) {
+		logoutPlayer(player);
+	}
+};
+
+var logoutPlayer = function(player) {
 	var cmd = 'logoutPlayer';
 	if (c.isSet(player)) {
-		logPlayer(guid, 'logged out');
+		logPlayer(player.guid, 'logged out');
 		gamehandler.playerLogout(player);
 		delete playerNicks[player.nick];
-		delete playerGuids[guid];
+		delete playerGuids[player.guid];
 		return c.success(cmd);
 	} else {
 		return c.error(cmd, 0, 'UNKOWN PLAYER');
@@ -59,7 +66,7 @@ exports.incoming = function(response, params) {
 		res = loginPlayer(params.guid, params.nick, p);
 		break;
 	case 'logoutPlayer':
-		res = logoutPlayer(params.guid, p);
+		res = logoutPlayer(p);
 		break;
 	case 'createGame':
 		if (c.isSet(p)) {
@@ -73,13 +80,6 @@ exports.incoming = function(response, params) {
 			res = gamehandler.joinGame(p, params.name);
 		} else {
 			res = c.error(params.cmd, 0, 'UNKNOWN PLAYER'); 
-		}
-		break;
-	case 'getgames':
-		if (c.isSet(p)) {
-			res = gamehandler.getGames();
-		} else {
-			res = c.error(params.cmd, 0, 'UNKOWN PLAYER');
 		}
 		break;
 	default:

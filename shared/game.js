@@ -13,7 +13,6 @@ Game = function(width, height) {
 	this.bricks = [];
 
 	this.maxPlayers = 4;
-
 };
 
 Game.prototype.addBody = function(body, active) {
@@ -21,7 +20,7 @@ Game.prototype.addBody = function(body, active) {
 		return false;
 	}
 	if (body instanceof Player) {
-		if (this.players.length == self.maxPlayers) {
+		if (this.players.length == this.maxPlayers) {
 			return false;
 		} else if (this.players.length === 0) {
 			this.owner = body;
@@ -37,7 +36,7 @@ Game.prototype.serialize = function() {
 	var self = this;
 	var data = {
 		width: this.world.width,
-		height: this.world.height
+		height: this.world.height,
 	};
 	var serializeboxes = function(name, attrs) {
 		if (self[name].length > 0) {
@@ -75,10 +74,18 @@ Game.prototype.serialize = function() {
 
 Game.prototype.removeBody = function(body) {
 	this.world.removeBody(body);
-	this.players = _.without(self.players, body);
-	this.bombs = _.without(self.bombs, body);
-	this.blocks = _.without(self.blocks, body);
-	this.bricks = _.without(self.bricks, body);
+	this.players = _.without(this.players, body);
+	this.bombs = _.without(this.bombs, body);
+	this.blocks = _.without(this.blocks, body);
+	this.bricks = _.without(this.bricks, body);
+};
+
+Game.prototype.getPlayer = function(nick) {
+	for (var i = 0; i < this.players.length; i++) {
+		if (this.players[i].nick === nick) {
+			return this.players[i];
+		}
+	}
 };
 
 Game.prototype.createBlocks = function(size) {
@@ -118,7 +125,7 @@ Game.deserialize = function(data) {
 			var boxPrY = Math.floor(data.width / size);
 			_.each(data[name].pos, function(pos) {
 				var x = pos % boxPrY * size;
-				var y = Math.floor(pos / boxPrY) * size
+				var y = Math.floor(pos / boxPrY) * size;
 				var box = new Box(x, y, size, size);
 				_.each(data[name].attrs, function(i, attr) {
 					box[attr] = data[name].attrs[attr];
@@ -131,7 +138,7 @@ Game.deserialize = function(data) {
 	deserializeBoxes('blocks');
 	deserializeBoxes('bricks');
 	_.each(data.player.players, function(p) {
-		game.addBody(new Player(p.x, p.y, data.player.size, data.player.size, p.nick));
+		game.addBody(new Player(p.x, p.y, data.player.size, data.player.size, p.nick), true);
 	});
 	return game;
 };

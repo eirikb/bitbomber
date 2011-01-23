@@ -8,6 +8,8 @@
         <script type="text/javascript" src="http://cdn.socket.io/stable/socket.io.js"></script>
         <script type="text/javascript" src="underscore-min.js"></script>
         <script type="text/javascript" src="bomberman.min.js"></script>
+        <script type="text/javascript" src="js/lobbyclient.js"></script>
+        <script type="text/javascript" src="js/gameclient.js"></script>
         <script type="text/javascript" src="js/client.js"></script>
     </head>
     <body>
@@ -15,12 +17,12 @@
             <div id="loginPanel">
                 <label for="nickField">Nick:</label>
                 <input id="nickField" /> 
+                <button id="loginButton">OK</button>
                 <span></span>
             </div>
             <div id="lobbyPanel">
-                <ul id="gameList"></ul>
-                <label for="gameField">Create game:</label>
-                <input id="gameField" />
+                <button id="playNowButton">Play now!</button>
+                <button id="createGameButton">Create game</button>
             </div>
             <div id="gamePanel"></div>
         </div>

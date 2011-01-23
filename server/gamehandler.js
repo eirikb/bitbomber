@@ -7,56 +7,62 @@ var playerGames = {};
 var games = {};
 var sessionPlayers = {};
 var playerClients = {};
+var openGames = {};
 
 exports.playerLogout = function(player) {
 	var g = playerGames[player];
 	if (c.isSet(g)) {
 		g.removeBody(player);
+		sendAll(g, c.success('playerLogout', {
+			player: player.nick
+		}));
 		if (g.players.length == 0) {
-			c.log('Game deleted ' + g.name);
-			delete games[g.name];
+			delete games[g.guid];
+			delete openGames[g.guid];
+			c.log('Game deleted ' + g.guid);
 		}
 	}
 };
 
-exports.createGame = function(player, name) {
+exports.createGame = function(player) {
 	var cmd = 'createGame';
-	if (!c.isSet(games[name])) {
-		var game = new Game(640, 480).createBlocks(16).createBricks(16);
-		game.name = name;
-		games[name] = game;
+	var guid = c.guid;
+	if (!c.isSet(games[guid])) {
+		var game = new Game(640, 480).createBlocks(16).createBricks(16, 20);
+		var guid = c.guid();
+		game.guid = guid;
+		games[guid] = game;
+		openGames[guid] = game;
 		playerGames[player] = game;
-		game.addBody(player);
-		c.log('Player ' + player.nick + ' created game ' + name);
+		game.addBody(player, true);
+		c.log('Player ' + player.nick + ' created game ' + guid);
+		var data = game.serialize();
 		return c.success(cmd, game.serialize());
 	} else {
-		return c.error(cmd, 1, 'NAME TAKEN');
+		return c.error(cmd, 1, 'GUID TAKEN');
 	}
 };
 
-exports.joinGame = function(player, name) {
+exports.joinGame = function(player) {
 	var cmd = 'joinGame';
-	var g = games[name];
-	if (c.isSet(g)) {
-		if (g.addBody(player)) {
-			c.log('Player ' + player.nick + ' join game ' + name);
-			return c.success(cmd, g);
+	var games = _.keys(openGames);
+	if (games.length > 0) {
+		var i = Math.floor(Math.random() * games.length);
+		var g = openGames[games[Math.floor(Math.random() * games.length)]];
+		if (g.addBody(player, true)) {
+			c.log('Player ' + player.nick + ' join game ' + g.guid);
+			sendAll(g, c.success('joinGame', {
+				player: player.serialize()
+			}));
+			return c.success(cmd, g.serialize());
 		} else {
-			c.log('Player ' + player.nick + ' unable to join game ' + name);
+			c.log('Player ' + player.nick + ' unable to join game ' + g.guid);
 			return c.error(cmd, 2, 'GAME CLOSED');
 		}
-	} else {
-		return c.error(cmd, 1, 'UNKOWN GAME');
-	}
-};
 
-exports.getGames = function() {
-	var cmd = 'getGame';
-	var ret = [];
-	_.each(games, function(g) {
-		ret.push(g.name);
-	});
-	return c.success(cmd, ret);
+	} else {
+		return c.error(cmd, 1, 'NO OPEN GAMES');
+	}
 };
 
 var sendAll = function(game, msg) {
@@ -81,20 +87,12 @@ var authPlayer = function(client, guid) {
 var startGame = function(client, player, game) {
 	var cmd = 'startGame';
 	if (c.isSet(game) && game.owner === player) {
+		delete openGames[game.guid];
 		c.log('IO: ' + player.nick + ' STARTED GAME');
 		sendAll(game, c.success(cmd));
 	} else {
 		c.log('IO: ' + player.nick + ' TRIED TO START GAME');
 		client.send(c.error(cmd, 0, 'NOT OWNER'));
-	};
-};
-
-var bounce = function(player, game, msg) {
-	if (c.isSet(player) && c.isSet(game)) {
-		sendAll(game, _.extend({
-			player: player.nick
-		},
-		msg));
 	};
 };
 
@@ -116,7 +114,14 @@ exports.setServer = function(server) {
 				break;
 			case 'endMove':
 			case 'startMove':
-				bounce(p, g, msg);
+				var cos = parseInt(msg.data.cos);
+				var sin = parseInt(msg.data.sin);
+				sendAll(g, c.success(msg.cmd, {
+					cos: cos,
+					sin: sin,
+					player: p.nick
+				},
+				'MOVING'));
 				break;
 			default:
 				c.log('IO: Unkown command ' + msg.cmd);
@@ -124,7 +129,9 @@ exports.setServer = function(server) {
 			}
 		});
 		client.on('disconnect', function() {
-			console.log('disc');
+			var player = sessionPlayers[client.sessionId];
+
+			lobbyhandler.logoutPlayer(player);
 		});
 	});
 };

@@ -1,9 +1,12 @@
-var player1, player2, client1, client2, onMsg1, onMsg2;
+var player1, player2, player3, client1, client2, onMsg1, onMsg2, g1, g2;
 
 $(function() {
+
+	QUnit.init();
+
 	asyncTest('create first player', function() {
 		$.getJSON('/lobby?cmd=loginPlayer&nick=player-1', function(data) {
-			player1 = $.extend(new Player(), data.data);
+			player1 = data.data;
 			equal(player1.nick, 'player-1');
 			start();
 		});
@@ -11,8 +14,16 @@ $(function() {
 
 	asyncTest('create second player', function() {
 		$.getJSON('/lobby?cmd=loginPlayer&nick=player-2', function(data) {
-			player2 = $.extend(new Player(), data.data);
+			player2 = data.data;
 			equal(player2.nick, 'player-2');
+			start();
+		});
+	});
+
+	asyncTest('create third player', function() {
+		$.getJSON('/lobby?cmd=loginPlayer&nick=player-3', function(data) {
+			player3 = data.data;
+			equal(player3.nick, 'player-3');
 			start();
 		});
 	});
@@ -58,18 +69,37 @@ $(function() {
 	});
 
 	asyncTest('create game', function() {
-		$.getJSON('/lobby?cmd=createGame&guid=' + player1.guid + '&name=gametest', function(data) {
-            console.log(data)
-			equal(data.data.players[0].nick, player1.nick);
+		$.getJSON('/lobby?cmd=createGame&guid=' + player1.guid, function(data) {
+			equal(data.data.player.players[0].nick, player1.nick);
+			g1 = Game.deserialize(data.data);
+			var guid = player1.guid;
+			player1 = g1.getPlayer(player1.nick);
+			player1.guid = guid;
+			equal(g1.players[0], player1);
 			start();
 		});
 	});
 
 	asyncTest('join game', function() {
-		$.getJSON('/lobby?cmd=joinGame&guid=' + player2.guid + '&name=gametest', function(data) {
-			equal(data.data.players[0].nick, player1.nick);
-			equal(data.data.players[1].nick, player2.nick);
-			start();
+		var count = 0;
+		onMsg1 = function(msg) {
+			g1.addBody(Player.deserialize(msg.data.player));
+			equal(g1.players.length, 2);
+			if (++count == 2) {
+				start();
+			}
+		};
+		$.getJSON('/lobby?cmd=joinGame&guid=' + player2.guid, function(data) {
+			g2 = Game.deserialize(data.data);
+			var guid = player2.guid;
+			player2 = g2.getPlayer(player2.nick);
+			player2.guid = guid;
+			equal(g2.players[1], player2);
+			equal(data.data.player.players[0].nick, player1.nick);
+			equal(data.data.player.players[1].nick, player2.nick);
+			if (++count == 2)  {
+				start();
+			}
 		});
 	});
 
@@ -102,25 +132,41 @@ $(function() {
 		});
 	});
 
+	asyncTest('join game fail', function() {
+		$.getJSON('/lobby?cmd=joinGame&guid=' + player3.guid, function(data) {
+			equal(data.result, 'ERROR');
+			start();
+		});
+	});
+
 	asyncTest('start moving', function() {
-		onMsg1 = function(msg) {
-			console.log(msg);
-		};
+		onMsg1 = function(msg) {};
 		onMsg2 = function(msg) {
-			console.log(msg);
 			start();
 		};
 		client2.send({
 			cmd: 'startMove',
-			direction: new OGE.Direction(1, 0)
+			data: new OGE.Direction(1, 0)
 		});
+	});
+
+	asyncTest('second player leave game', function() {
+		onMsg1 = function(msg) {
+			var player = g1.getPlayer(msg.data.player);
+			g1.removeBody(g1.getPlayer(msg.data.player));
+			equal(g1.players.length, 1);
+			start();
+		};
+		client2.disconnect();
 	});
 
 	asyncTest('cleanup', function() {
 		var s = '/lobby?cmd=logoutPlayer&guid=';
 		$.getJSON(s + player1.guid, function() {
 			$.getJSON(s + player2.guid, function() {
-				start();
+				$.getJSON(s + player3.guid, function() {
+					start();
+				});
 			});
 		});
 	});

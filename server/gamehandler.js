@@ -129,9 +129,17 @@ exports.setServer = function(server) {
 				startGame(client, p, g);
 				break;
 			case 'endMove':
+				var x = parseInt(msg.data.x, 10);
+				var y = parseInt(msg.data.y, 10);
+				sendAll(g, c.success(msg.cmd, {
+					x: x,
+					y: y,
+					player: p.nick
+				}), p);
+				break;
 			case 'startMove':
-				var cos = parseInt(msg.data.cos);
-				var sin = parseInt(msg.data.sin);
+				var cos = parseInt(msg.data.cos, 10);
+				var sin = parseInt(msg.data.sin, 10);
 				sendAll(g, c.success(msg.cmd, {
 					cos: cos,
 					sin: sin,

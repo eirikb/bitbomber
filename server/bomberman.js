@@ -4,7 +4,6 @@ c = require('commons'),
 url = require('url'),
 lobbyhandler = require('lobbyhandler'),
 gamehandler = require('gamehandler'),
-fs = require('fs'),
 OGE = require('../lib/bomberman-client/dist/bomberman');
 global._ = require('../lib/underscore/underscore');
 

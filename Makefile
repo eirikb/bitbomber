@@ -3,6 +3,7 @@ NODE_STATIC_DIR = ${LIB_DIR}/node-static
 SOCKET_IO_DIR = ${LIB_DIR}/socket.io
 UNDERSCORE_DIR = ${LIB_DIR}/underscore
 BOMBERMAN_CLIENT_DIR = ${LIB_DIR}/bomberman-client
+OGE_DIR = ${LIB_DIR}/oge
 
 all: update
 
@@ -11,20 +12,21 @@ update:
 	$(call clone_or_pull, ${SOCKET_IO_DIR}, https://github.com/LearnBoost/Socket.IO-node.git)
 	$(call clone_or_pull, ${BOMBERMAN_CLIENT_DIR}, https://github.com/eirikb/bomberman-client.git)
 	$(call clone_or_pull, ${UNDERSCORE_DIR}, https://github.com/documentcloud/underscore.git)
+	$(call clone_or_pull, ${OGE_DIR}, https://github.com/eirikb/oge.git)
 
 hack:
 	cd ${BOMBERMAN_CLIENT_DIR};make update
 	cd public; \
 		ln -s ../${BOMBERMAN_CLIENT_DIR}/public/* ./; \
 		ln -s ../${BOMBERMAN_CLIENT_DIR}/lib/qunit/qunit/qunit.* ./; \
-		ln -s ../${BOMBERMAN_CLIENT_DIR}/lib/oge/dist/oge.js ./;\
+		ln -s ../${OGE_DIR}/dist/oge.js ./; \
 		ln -s ../${UNDERSCORE_DIR}/underscore.js ./;\
 		ln -s ../${BOMBERMAN_CLIENT_DIR}/src/* ./;
 devhack:
 	cd public;\
 		ln -s ../../bomberman-client/public/* ./; \
 		ln -s ../../bomberman-client/lib/qunit/qunit/qunit.* ./; \
-		ln -s ../../bomberman-client/lib/oge/dist/oge.js ./; \
+		ln -s ../${OGE_DIR}/dist/oge.js ./; \
 		ln -s ../${UNDERSCORE_DIR}/underscore.js ./;\
 		ln -s ../../bomberman-client/src/* ./;
 

@@ -49,11 +49,25 @@ exports.joinGame = function(player) {
 	if (games.length > 0) {
 		var i = Math.floor(Math.random() * games.length);
 		var g = openGames[games[Math.floor(Math.random() * games.length)]];
+		var x = 0,
+		y = 0;
+		switch (g.players.length) {
+		case 1:
+		case 3:
+			x = g.world.width - player.width;
+			break;
+		case 2:
+		case 3:
+			y = g.world.height - player.height;
+			break;
+		}
+		player.x = x;
+		player.y = y;
 		if (g.addBody(player, true)) {
 			c.log('Player ' + player.nick + ' join game ' + g.guid);
 			sendAll(g, c.success('joinGame', {
 				player: player.serialize()
-			}));
+			}), player);
 			return c.success(cmd, g.serialize());
 		} else {
 			c.log('Player ' + player.nick + ' unable to join game ' + g.guid);
@@ -65,9 +79,11 @@ exports.joinGame = function(player) {
 	}
 };
 
-var sendAll = function(game, msg) {
+var sendAll = function(game, msg, excludePlayer) {
 	_.each(game.players, function(player) {
-		playerClients[player.nick].send(msg);
+		if (!excludePlayer || player.nick !== excludePlayer.nick) {
+			playerClients[player.nick].send(msg);
+		}
 	});
 };
 
@@ -120,8 +136,7 @@ exports.setServer = function(server) {
 					cos: cos,
 					sin: sin,
 					player: p.nick
-				},
-				'MOVING'));
+				}), p);
 				break;
 			default:
 				c.log('IO: Unkown command ' + msg.cmd);
@@ -130,7 +145,6 @@ exports.setServer = function(server) {
 		});
 		client.on('disconnect', function() {
 			var player = sessionPlayers[client.sessionId];
-
 			lobbyhandler.logoutPlayer(player);
 		});
 	});

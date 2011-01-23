@@ -21,6 +21,8 @@ GameClient = function(game, nick) {
 			case 'endMove':
 				var p = game.getPlayer(msg.data.player);
 				p.direction = null;
+                p.x = msg.data.x;
+                p.y = msg.data.y;
 				break;
 			}
 		}

@@ -12,7 +12,6 @@ GameClient = function(game, nick) {
 				var p = Player.deserialize(msg.data.player);
 				game.addBody(p, true);
 				addBody(p, 'pl1');
-				console.log('test', game.players);
 				break;
 			case 'startMove':
 				var p = game.getPlayer(msg.data.player);

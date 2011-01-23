@@ -81,7 +81,12 @@ GameClient = function(game, nick) {
 				player.direction = new OGE.Direction(cos, sin);
 				client.send({
 					cmd: 'startMove',
-					data: player.direction
+					data: {
+						cos: cos,
+						sin: sin,
+						x: player.x,
+						y: player.y
+					}
 				});
 				e.stopPropagation();
 				e.preventDefault();

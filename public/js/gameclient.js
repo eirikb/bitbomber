@@ -17,12 +17,14 @@ GameClient = function(game, nick) {
 			case 'startMove':
 				var p = game.getPlayer(msg.data.player);
 				p.direction = new OGE.Direction(msg.data.cos, msg.data.sin);
+				p.x = msg.data.x;
+				p.y = msg.data.y;
 				break;
 			case 'endMove':
 				var p = game.getPlayer(msg.data.player);
 				p.direction = null;
-                p.x = msg.data.x;
-                p.y = msg.data.y;
+				p.x = msg.data.x;
+				p.y = msg.data.y;
 				break;
 			}
 		}

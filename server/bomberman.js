@@ -11,10 +11,7 @@ global._ = require('../lib/underscore/underscore');
 function Bomberman(port) {
 	global._ = _;
 	var server = http.createServer(function(request, response) {
-		var publicFiles = new nodeStatic.Server('lib/bomberman-client/public', {
-			cache: false
-		});
-		var sharedFiles = new nodeStatic.Server('lib/bomberman-client/src', {
+		var publicFiles = new nodeStatic.Server('public', {
 			cache: false
 		});
 
@@ -24,11 +21,7 @@ function Bomberman(port) {
 			if (location.pathname === '/lobby') {
 				lobbyhandler.incoming(response, params);
 			} else {
-				publicFiles.serve(request, response, function(e, res) {
-					if (e && (e.status === 404)) {
-						sharedFiles.serve(request, response);
-					}
-				});
+				publicFiles.serve(request, response);
 			}
 		});
 	});

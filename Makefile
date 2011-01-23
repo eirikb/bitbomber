@@ -4,7 +4,7 @@ SOCKET_IO_DIR = ${LIB_DIR}/socket.io
 UNDERSCORE_DIR = ${LIB_DIR}/underscore
 BOMBERMAN_CLIENT_DIR = ${LIB_DIR}/bomberman-client
 
-all: update hack
+all: update
 
 update: 
 	$(call clone_or_pull, ${NODE_STATIC_DIR}, https://github.com/cloudhead/node-static.git)
@@ -14,10 +14,17 @@ update:
 
 hack:
 	cd ${BOMBERMAN_CLIENT_DIR};make update
-	cp ${BOMBERMAN_CLIENT_DIR}/lib/qunit/qunit/qunit.js ${BOMBERMAN_CLIENT_DIR}/public/js/
-	cp ${BOMBERMAN_CLIENT_DIR}/lib/qunit/qunit/qunit.css ${BOMBERMAN_CLIENT_DIR}/public/css/
-	cp ${BOMBERMAN_CLIENT_DIR}/lib/oge/dist/oge.js ${BOMBERMAN_CLIENT_DIR}/public/js/
-	cp ${BOMBERMAN_CLIENT_DIR}/lib/underscore/underscore.js ${BOMBERMAN_CLIENT_DIR}/public/js/
+	cd public; \
+		ln -s ${BOMBERMAN_CLIENT_DIR}/lib/qunit/qunit/qunit.* ./; \
+		ln -s ${BOMBERMAN_CLIENT_DIR}/lib/oge/dist/oge.js ./;\
+		ln -s ${BOMBERMAN_CLIENT_DIR}/lib/underscore/underscore.js ./;
+devhack:
+	cd public;\
+		ln -s ../../bomberman-client/public/* ./; \
+		ln -s ../../bomberman-client/lib/qunit/qunit/qunit.* ./; \
+		ln -s ../../bomberman-client/lib/oge/dist/oge.js ./; \
+		ln -s ../../bomberman-client/lib/underscore/underscore.js ./; \
+		ln -s ../../bomberman-client/src/* ./;
 
 define clone_or_pull
 -@@if test ! -d $(strip ${1})/.git; then \

@@ -20,6 +20,8 @@ html {
 #gamePanel {
     display: none;
     background-color: #E7C6A5;
+     -moz-border-radius: 15px;
+     border-radius: 15px;
 }
 #lobbyPanel {
     padding: 10px;

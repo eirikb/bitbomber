@@ -106,6 +106,8 @@ exports.startGame = function(cmd, client, player, game) {
 exports.endMove = function(cmd, player, game, data) {
 	var x = parseInt(data.x, 10);
 	var y = parseInt(data.y, 10);
+    player.x = x;
+    player.y = y;
 	sendAll(game, c.success(cmd, {
 		x: x,
 		y: y,
@@ -118,6 +120,8 @@ exports.startMove = function(cmd, player, game, data) {
 	var sin = parseInt(data.sin, 10);
 	var x = parseInt(data.x, 10);
 	var y = parseInt(data.y, 10);
+    player.x = x;
+    player.y = y;
 	sendAll(game, c.success(cmd, {
 		cos: cos,
 		sin: sin,

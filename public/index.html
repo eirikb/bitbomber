@@ -1,32 +1,20 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <meta charset=utf-8 />
-        <title>Bomberman Visual test</title>
-        <link rel="stylesheet" type="text/css" href="css/bomberman.css" />
+        <meta charset="utf-8">
+        <title>Bomberman</title>
+        <link rel="stylesheet" type="text/css" href="bomberman.css">
         <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"></script>
         <script type="text/javascript" src="http://cdn.socket.io/stable/socket.io.js"></script>
-        <script type="text/javascript" src="underscore.js"></script>
-        <script type="text/javascript" src="oge.js"></script>
-        <script type="text/javascript" src="base.js"></script>
-        <script type="text/javascript" src="game.js"></script>
-        <script type="text/javascript" src="player.js"></script>
-        <script type="text/javascript" src="box.js"></script>
-        <script type="text/javascript" src="bomb.js"></script>
-        <script type="text/javascript" src="fire.js"></script>
-        <script type="text/javascript" src="powerup.js"></script>
-        <script type="text/javascript" src="js/lobbyclient.js"></script>
-        <script type="text/javascript" src="js/gameclient.js"></script>
-        <script type="text/javascript" src="js/client.js"></script>
+        <script type="text/javascript" src="bomberman.all.min.js"></script>
     </head>
     <body>
         <div id="content">
             <div id="loginPanel">
-                <img src="images/bg.png" />
+                <img src="images/bg.png">
                 <label for="nickField">Nick:</label>
-                <input id="nickField" /> 
+                <input id="nickField"> 
                 <button id="loginButton">OK</button>
-                <span></span>
             </div>
             <div id="lobbyPanel">
                 <button id="playNowButton">Play now!</button>
@@ -39,3 +27,4 @@
         </div>
     </body>
 </html>
+

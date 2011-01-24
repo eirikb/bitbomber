@@ -2,7 +2,6 @@ LIB_DIR = lib
 SRC_DIR = src
 DIST_DIR = dist
 BOMBERMAN_GAME_DIR = ${LIB_DIR}/bomberman-game
-QUNIT_DIR = ${LIB_DIR}/qunit
 
 BASE_FILES = ${SRC_DIR}/client.js\
 			 ${SRC_DIR}/lobbyhandler.js\
@@ -27,7 +26,6 @@ lint:
 
 update: 
 	$(call clone_or_pull, ${BOMBERMAN_GAME_DIR}, https://github.com/eirikb/bomberman-game.git)
-	$(call clone_or_pull, ${QUNIT_DIR}, https://github.com/jquery/qunit.git)
 
 build: 
 	cat ${BOMBERMAN_GAME_DIR}/dist/bomberman.js > ${BUNDLE_VERSION}

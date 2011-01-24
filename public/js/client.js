@@ -15,6 +15,7 @@ utils.log = function(msg) {
 		}
 	}
 	$infoArea.val($infoArea.val() + ($infoArea.val().length > 0 ? '\n': '') + msg);
+	$infoArea.attr('scrollTop', $infoArea.attr('scrollHeight'));
 };
 
 $(function() {

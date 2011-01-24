@@ -1,20 +1,38 @@
-#content {
+html {
+    background: url(/images/bomberman_sunburst.png) no-repeat center center fixed;
+    -webkit-background-size: cover;
+    -moz-background-size: cover;
+    -o-background-size: cover;
+    background-size: cover;
+    font-family: helvetica;
+ }
+ #content {
     margin-left: auto;
     margin-right: auto;
     position: relative;
     width: 640px;
+    background-color: #B22222;
 }
 .body {
     position: absolute;
 }
 #gamePanel {
     display: none;
+    background-color: #E7C6A5;
 }
 #lobbyPanel {
+    padding: 10px;
     display: none;
 }
+#loginPanel {
+    padding: 10px;
+}
 #infoArea {
-    width: 640px;
+    width: 600px;
     height: 200px;
+    margin-left: 18px;
+}
+#fpsLabel {
+    padding-left: 20px;
 }
 

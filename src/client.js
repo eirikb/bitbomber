@@ -1,7 +1,4 @@
 var $infoArea;
-
-var client;
-
 var utils = {};
 utils.log = function(msg) {
 	if (msg.cmd && msg.result) {
@@ -18,8 +15,21 @@ utils.log = function(msg) {
 	$infoArea.attr('scrollTop', $infoArea.attr('scrollHeight'));
 };
 
+var bomberman = function() {
+	var lobbyHandler = new LobbyHandler(this),
+	gameHandler = new GameHandler(this);
+
+	this.startGame = function(game, nick) {
+		gameHandler.startGame(game, nick);
+	};
+
+	this.login = function(guid) {
+		gameHandler.login(guid);
+	};
+};
+
 $(function() {
 	$infoArea = $('#infoArea');
-	LobbyHandler();
+	bomberman();
 });
 

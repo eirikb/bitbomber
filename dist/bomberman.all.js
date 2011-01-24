@@ -1544,9 +1544,6 @@ Game.deserialize = function(data) {
 };
 
 var $infoArea;
-
-var client;
-
 var utils = {};
 utils.log = function(msg) {
 	if (msg.cmd && msg.result) {
@@ -1563,28 +1560,34 @@ utils.log = function(msg) {
 	$infoArea.attr('scrollTop', $infoArea.attr('scrollHeight'));
 };
 
+var bomberman = function() {
+	var lobbyHandler = new LobbyHandler(this),
+	gameHandler = new GameHandler(this);
+
+	this.startGame = function(game, nick) {
+		gameHandler.startGame(game, nick);
+	};
+
+	this.login = function(guid) {
+		gameHandler.login(guid);
+	};
+};
+
 $(function() {
 	$infoArea = $('#infoArea');
-	LobbyHandler();
+	bomberman();
 });
 
-LobbyHandler = function() {
+LobbyHandler = function(bomberman) {
 	var lobbyClient = new LobbyClient(this),
 	lobbyPanel = new LobbyPanel(this),
-	gameClient = new GameClient(),
-	gameHandler = new GameHandler(gameClient),
-	game,
-	user,
-	player;
-
-	gameClient.addListener('authPlayer', function(result, data) {
-		console.log("auth: " + result, data);
-	});
+	user;
 
 	this.createGame = function(fn) {
 		lobbyClient.createGame(function(data) {
 			if (data.result === 'OK') {
 				var game = Game.deserialize(data.data);
+				bomberman.startGame(game, user.nick);
 				fn(true);
 			} else {
 				fn(fale);
@@ -1596,6 +1599,7 @@ LobbyHandler = function() {
 		lobbyClient.playNow(function(data) {
 			if (data.result === 'OK') {
 				var game = Game.deserialize(data.data);
+				bomberman.startGame(game, user.nick);
 				fn(true);
 			} else {
 				fn(false);
@@ -1608,9 +1612,7 @@ LobbyHandler = function() {
 		lobbyClient.login(nick, function(data) {
 			if (data.result === 'OK') {
 				user = data.data;
-				gameClient.send('authPlayer', {
-					guid: user.guid
-				});
+				bomberman.login(user.guid);
 				fn(true);
 			} else {
 				fn(false);
@@ -1709,8 +1711,58 @@ LobbyPanel = function(lobbyHandler) {
 	init();
 };
 
-GameHandler = function(gameClient) {
-	var gamePanel = new GamePanel(this);
+GameHandler = function(bomberman) {
+	var gamePanel = new GamePanel(this),
+	gameClient = new GameClient(),
+	game,
+	player;
+
+	this.startGame = function(newGame, nick) {
+		game = newGame;
+		player = game.getPlayer(nick);
+		gamePanel.startGame(game);
+	};
+
+	this.login = function(guid) {
+		gameClient.send('authPlayer', {
+			guid: guid
+		});
+	};
+
+	this.step = function() {
+		game.world.step();
+	};
+
+	this.startMove = function(cos, sin) {
+		player.direction = new OGE.Direction(cos, sin);
+		gameClient.send('startMove', {
+			cos: cos,
+			sin: sin,
+			x: player.x,
+			y: player.y
+		});
+	};
+
+	this.endMove = function() {
+		player.direction = null;
+		gameClient.send('endMove', {
+			x: player.x,
+			y: player.y
+		});
+	};
+
+	this.placeBomb = function() {
+		if (player.bombs > 0) {
+			player.bombs--;
+			var bomb = new Bomb(Math.floor((player.x + 8) / 16) * 16, Math.floor((player.y + 8) / 16) * 16, 16, 16);
+			bomb.power = player.power;
+			gameClient.send('placeBomb', {
+				x: bomb.x,
+				y: bomb.y
+			});
+			return bomb;
+		}
+	};
 
 	gameClient.addListener('joinGame', function(data) {
 		p = Player.deserialize(msg.data.player);
@@ -1765,6 +1817,7 @@ GameClient = function() {
 
 	client.connect();
 	client.on('message', function(msg) {
+		utils.log(msg);
 		_.each(listeners[msg.cmd], function(fn) {
 			fn(msg.result, msg.data);
 		});
@@ -1777,9 +1830,9 @@ GamePanel = function(gameHandler) {
 	keyboardHandler,
 	factorialTimer;
 
-	this.init = function() {
-        keyboardHandler = new KeyboardHandler();
-        factorialTimer = new factorialTimer();
+	this.startGame = function(game) {
+		keyboardHandler = new KeyboardHandler();
+		factorialTimer = new FactorialTimer();
 
 		$gamePanel.find('*').remove();
 		$gamePanel.show();
@@ -1799,6 +1852,8 @@ GamePanel = function(gameHandler) {
 		});
 
 		keyboardHandler.keydown(function(dir) {
+			var cos = 0,
+			sin = 0;
 			switch (dir) {
 			case 'space':
 				var bomb = gameHandler.placeBomb();
@@ -1824,6 +1879,7 @@ GamePanel = function(gameHandler) {
 			gameHandler.endMove();
 		});
 
+		var frame = 0;
 		factorialTimer.start(function(time) {
 			gameHandler.step();
 			if (++frame === 20) {
@@ -1856,7 +1912,6 @@ GamePanel = function(gameHandler) {
 		bomb.animate = 0;
 		bomb.sprite = 0;
 		bomb.sprites = [1, 2, 3];
-		game.addBody(bomb);
 		addBody(bomb, 'bomb1');
 	};
 
@@ -1899,18 +1954,17 @@ KeyboardHandler = function() {
 	var keyCode, keydown, keyup;
 
 	this.keydown = function(callback) {
-		keydown = fn;
+		keydown = callback;
 		return this;
 	};
 
 	this.keyup = function(callback) {
-		keyup = fn;
+		keyup = callback;
 		return this;
 	};
 
 	$(document).keydown(function(e) {
-		var prevent = false,
-		dir = null;
+		var dir = null;
 		switch (e.keyCode) {
 		case 32:
 			dir = 'space';
@@ -1932,17 +1986,15 @@ KeyboardHandler = function() {
 			dir = 'down';
 			break;
 		}
-		if (dir !== null && keyCode !== e.keyCode) {
-			keyCode = e.keyCode;
-			prevent = true;
-			keydown(dir);
-		}
-		if (prevent) {
+		if (dir !== null) {
+			if (keyCode !== e.keyCode) {
+				keyCode = e.keyCode;
+				keydown(dir);
+			}
 			e.stopPropagation();
 			e.preventDefault();
 			return false;
 		}
-
 	}).keyup(function(e) {
 		if (e.keyCode === keyCode) {
 			keyCode = 0;
@@ -1966,7 +2018,6 @@ FactorialTimer = function() {
 	var time = new Date().getTime(),
 	lastTime = 0,
 	sleepTime = 50,
-	frame = 0,
 	callback;
 
 	this.start = function(callbackFn) {

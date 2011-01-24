@@ -2,7 +2,6 @@ FactorialTimer = function() {
 	var time = new Date().getTime(),
 	lastTime = 0,
 	sleepTime = 50,
-	frame = 0,
 	callback;
 
 	this.start = function(callbackFn) {

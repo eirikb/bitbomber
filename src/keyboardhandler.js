@@ -2,18 +2,17 @@ KeyboardHandler = function() {
 	var keyCode, keydown, keyup;
 
 	this.keydown = function(callback) {
-		keydown = fn;
+		keydown = callback;
 		return this;
 	};
 
 	this.keyup = function(callback) {
-		keyup = fn;
+		keyup = callback;
 		return this;
 	};
 
 	$(document).keydown(function(e) {
-		var prevent = false,
-		dir = null;
+		var dir = null;
 		switch (e.keyCode) {
 		case 32:
 			dir = 'space';
@@ -35,17 +34,15 @@ KeyboardHandler = function() {
 			dir = 'down';
 			break;
 		}
-		if (dir !== null && keyCode !== e.keyCode) {
-			keyCode = e.keyCode;
-			prevent = true;
-			keydown(dir);
-		}
-		if (prevent) {
+		if (dir !== null) {
+			if (keyCode !== e.keyCode) {
+				keyCode = e.keyCode;
+				keydown(dir);
+			}
 			e.stopPropagation();
 			e.preventDefault();
 			return false;
 		}
-
 	}).keyup(function(e) {
 		if (e.keyCode === keyCode) {
 			keyCode = 0;

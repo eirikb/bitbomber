@@ -4,9 +4,9 @@ GamePanel = function(gameHandler) {
 	keyboardHandler,
 	factorialTimer;
 
-	this.init = function() {
-        keyboardHandler = new KeyboardHandler();
-        factorialTimer = new factorialTimer();
+	this.startGame = function(game) {
+		keyboardHandler = new KeyboardHandler();
+		factorialTimer = new FactorialTimer();
 
 		$gamePanel.find('*').remove();
 		$gamePanel.show();
@@ -26,6 +26,8 @@ GamePanel = function(gameHandler) {
 		});
 
 		keyboardHandler.keydown(function(dir) {
+			var cos = 0,
+			sin = 0;
 			switch (dir) {
 			case 'space':
 				var bomb = gameHandler.placeBomb();
@@ -51,6 +53,7 @@ GamePanel = function(gameHandler) {
 			gameHandler.endMove();
 		});
 
+		var frame = 0;
 		factorialTimer.start(function(time) {
 			gameHandler.step();
 			if (++frame === 20) {
@@ -83,7 +86,6 @@ GamePanel = function(gameHandler) {
 		bomb.animate = 0;
 		bomb.sprite = 0;
 		bomb.sprites = [1, 2, 3];
-		game.addBody(bomb);
 		addBody(bomb, 'bomb1');
 	};
 

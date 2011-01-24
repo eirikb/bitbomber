@@ -18,6 +18,7 @@ GameClient = function() {
 
 	client.connect();
 	client.on('message', function(msg) {
+		utils.log(msg);
 		_.each(listeners[msg.cmd], function(fn) {
 			fn(msg.result, msg.data);
 		});

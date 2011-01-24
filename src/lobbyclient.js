@@ -15,7 +15,7 @@ LobbyClient = function() {
 	};
 
 	this.login = function(nick, fn) {
-		$.getJSON('/lobby?cmd=loginPlayer&nick=' + $nickField.val(), function(data) {
+		$.getJSON('/lobby?cmd=loginPlayer&nick=' + nick, function(data) {
 			utils.log(data);
 			if (data.result === 'OK') {
 				user = data.data;
@@ -23,7 +23,5 @@ LobbyClient = function() {
 			fn(data);
 		});
 	};
-
-	init();
 };
 

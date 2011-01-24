@@ -1,5 +1,6 @@
-LobbyClient = function() {
+LobbyHandler = function() {
 	var lobbyClient = new LobbyClient(this),
+	lobbyPanel = new LobbyPanel(this),
 	gameClient = new GameClient(),
 	gameHandler = new GameHandler(gameClient),
 	game,
@@ -33,12 +34,14 @@ LobbyClient = function() {
 
 	};
 
-	this.login = function(nick) {
+	this.login = function(nick, fn) {
 		lobbyClient.login(nick, function(data) {
 			if (data.result === 'OK') {
 				user = data.data;
-				gameClient.send('authPlayer', user.guid);
-				fn(triue);
+				gameClient.send('authPlayer', {
+					guid: user.guid
+				});
+				fn(true);
 			} else {
 				fn(false);
 			}

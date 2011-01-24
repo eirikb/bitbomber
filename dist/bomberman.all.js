@@ -1565,11 +1565,12 @@ utils.log = function(msg) {
 
 $(function() {
 	$infoArea = $('#infoArea');
-	LobbyClient();
+	LobbyHandler();
 });
 
-LobbyClient = function() {
+LobbyHandler = function() {
 	var lobbyClient = new LobbyClient(this),
+	lobbyPanel = new LobbyPanel(this),
 	gameClient = new GameClient(),
 	gameHandler = new GameHandler(gameClient),
 	game,
@@ -1603,12 +1604,14 @@ LobbyClient = function() {
 
 	};
 
-	this.login = function(nick) {
+	this.login = function(nick, fn) {
 		lobbyClient.login(nick, function(data) {
 			if (data.result === 'OK') {
 				user = data.data;
-				gameClient.send('authPlayer', user.guid);
-				fn(triue);
+				gameClient.send('authPlayer', {
+					guid: user.guid
+				});
+				fn(true);
 			} else {
 				fn(false);
 			}
@@ -1633,7 +1636,7 @@ LobbyClient = function() {
 	};
 
 	this.login = function(nick, fn) {
-		$.getJSON('/lobby?cmd=loginPlayer&nick=' + $nickField.val(), function(data) {
+		$.getJSON('/lobby?cmd=loginPlayer&nick=' + nick, function(data) {
 			utils.log(data);
 			if (data.result === 'OK') {
 				user = data.data;
@@ -1641,8 +1644,6 @@ LobbyClient = function() {
 			fn(data);
 		});
 	};
-
-	init();
 };
 
 LobbyPanel = function(lobbyHandler) {
@@ -1709,6 +1710,7 @@ LobbyPanel = function(lobbyHandler) {
 };
 
 GameHandler = function(gameClient) {
+	var gamePanel = new GamePanel(this);
 
 	gameClient.addListener('joinGame', function(data) {
 		p = Player.deserialize(msg.data.player);
@@ -1769,72 +1771,17 @@ GameClient = function() {
 	});
 };
 
-GamePanel = function(gameClient) {
+GamePanel = function(gameHandler) {
 	var $gamePanel = $('#gamePanel'),
 	$fpsLabel = $('#fpsLabel'),
-	keyboardHandler = new KeyboardHandler(),
-	factorialTimer = new FactorialTimer();
+	keyboardHandler,
+	factorialTimer;
 
-	this.init = function(gameHandler) {
+	this.init = function() {
+        keyboardHandler = new KeyboardHandler();
+        factorialTimer = new factorialTimer();
+
 		$gamePanel.find('*').remove();
-	};
-
-	var addBody = function(body, image) {
-		var $img = $('<img>').attr('src', 'images/' + image + '.png').css('left', body.x).css('top', body.y).addClass('body');
-		$gamePanel.append($img);
-		body.$img = $img;
-	};
-
-	var addPlayer = function(player) {
-		addBody(player, 'pl1');
-		player.animate = 0;
-		player.sprite = 0;
-		player.sprites = [1, 2, 1, 3];
-	};
-
-	var placeBomb = function(bomb) {
-		bomb.animate = 0;
-		bomb.sprite = 0;
-		bomb.sprites = [1, 2, 3];
-		game.addBody(bomb);
-		addBody(bomb, 'bomb1');
-	};
-
-	var animatePlayer = function(p) {
-		p.$img.css('left', p.x).css('top', p.y - 4);
-		if (p.direction !== null && p.speed > 0) {
-			if (p.lastDirection !== p.direction) {
-				p.animate = 0;
-				p.lastDirection = p.direction;
-			}
-			if (--p.animate < 0) {
-				p.animate = 5;
-				if (++p.sprite >= p.sprites.length) {
-					p.sprite = 0;
-				}
-				var d;
-				if (p.direction.cos !== 0) {
-					d = p.direction.cos > 0 ? 'r': 'l';
-				} else if (p.direction.sin !== 0) {
-					d = p.direction.sin > 0 ? 'd': 'u';
-				}
-				p.$img.attr('src', '/images/p' + d + p.sprites[p.sprite] + '.png');
-			}
-
-		}
-	};
-
-	var animateBomb = function(b) {
-		if (--b.animate < 0) {
-			b.animate = 5;
-			if (++b.sprite >= b.sprites.length) {
-				b.sprite = 0;
-			}
-			b.$img.attr('src', '/images/bomb' + b.sprites[b.sprite] + '.png');
-		}
-	};
-
-	var init = function() {
 		$gamePanel.show();
 
 		$gamePanel.width(game.world.width).height(game.world.height);
@@ -1890,6 +1837,61 @@ GamePanel = function(gameClient) {
 				animateBomb(b);
 			});
 		});
+	};
+
+	var addBody = function(body, image) {
+		var $img = $('<img>').attr('src', 'images/' + image + '.png').css('left', body.x).css('top', body.y).addClass('body');
+		$gamePanel.append($img);
+		body.$img = $img;
+	};
+
+	var addPlayer = function(player) {
+		addBody(player, 'pl1');
+		player.animate = 0;
+		player.sprite = 0;
+		player.sprites = [1, 2, 1, 3];
+	};
+
+	var placeBomb = function(bomb) {
+		bomb.animate = 0;
+		bomb.sprite = 0;
+		bomb.sprites = [1, 2, 3];
+		game.addBody(bomb);
+		addBody(bomb, 'bomb1');
+	};
+
+	var animatePlayer = function(p) {
+		p.$img.css('left', p.x).css('top', p.y - 4);
+		if (p.direction !== null && p.speed > 0) {
+			if (p.lastDirection !== p.direction) {
+				p.animate = 0;
+				p.lastDirection = p.direction;
+			}
+			if (--p.animate < 0) {
+				p.animate = 5;
+				if (++p.sprite >= p.sprites.length) {
+					p.sprite = 0;
+				}
+				var d;
+				if (p.direction.cos !== 0) {
+					d = p.direction.cos > 0 ? 'r': 'l';
+				} else if (p.direction.sin !== 0) {
+					d = p.direction.sin > 0 ? 'd': 'u';
+				}
+				p.$img.attr('src', '/images/p' + d + p.sprites[p.sprite] + '.png');
+			}
+
+		}
+	};
+
+	var animateBomb = function(b) {
+		if (--b.animate < 0) {
+			b.animate = 5;
+			if (++b.sprite >= b.sprites.length) {
+				b.sprite = 0;
+			}
+			b.$img.attr('src', '/images/bomb' + b.sprites[b.sprite] + '.png');
+		}
 	};
 };
 

@@ -20,6 +20,6 @@ utils.log = function(msg) {
 
 $(function() {
 	$infoArea = $('#infoArea');
-	LobbyClient();
+	LobbyHandler();
 });
 

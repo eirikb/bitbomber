@@ -1,4 +1,5 @@
 GameHandler = function(gameClient) {
+	var gamePanel = new GamePanel(this);
 
 	gameClient.addListener('joinGame', function(data) {
 		p = Player.deserialize(msg.data.player);

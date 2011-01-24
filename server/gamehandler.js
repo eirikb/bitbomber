@@ -13,13 +13,12 @@ exports.startBombTimer = function() {
 			console.log(bomb.x + ' - ' + bomb.y + ' - ' + bomb.timer);
 			if (--bomb.timer === 0) {
 				sendAll(bombGames[bomb], c.success('explodeBomb', {
-					data: {
-						x: bomb.x,
-						y: bomb.y
-					}
+					x: bomb.x,
+					y: bomb.y
 				}));
 				bombs.splice(i, 1);
 				delete bombGames[bomb];
+                game.removeBody(bomb);
 			}
 		}
 	};

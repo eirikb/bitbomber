@@ -50,7 +50,7 @@ LobbyClient = function() {
 	var showLobby = function() {
 		$loginPanel.hide();
 		$lobbyPanel.show();
-	}
+	};
 
 	var createGame = function() {
 		$.getJSON('/lobby?cmd=createGame&guid=' + user.guid, function(data) {

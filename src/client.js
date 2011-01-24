@@ -5,12 +5,12 @@ var client;
 var utils = {};
 utils.log = function(msg) {
 	if (msg.cmd && msg.result) {
-		if (typeof(console) !== 'undefined' && console != null) {
+		if (typeof console !== 'undefined' && console !== null) {
 			console.log(msg.cmd, msg);
 		}
 		msg = msg.cmd + ' - ' + msg.result;
 	} else {
-		if (typeof(console) !== 'undefined' && console != null) {
+		if (typeof console !== 'undefined' && console !== null) {
 			console.log(msg);
 		}
 	}
@@ -20,6 +20,6 @@ utils.log = function(msg) {
 
 $(function() {
 	$infoArea = $('#infoArea');
-	new LobbyClient();
+	LobbyClient();
 });
 

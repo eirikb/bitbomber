@@ -6,26 +6,27 @@ GameClient = function(game, nick) {
 
 	client.on('message', function(msg) {
 		if (msg.result === 'OK') {
+			var p;
 			switch (msg.cmd) {
 			case 'joinGame':
-				var p = Player.deserialize(msg.data.player);
+				p = Player.deserialize(msg.data.player);
 				game.addBody(p, true);
 				addPlayer(p);
 				break;
 			case 'startMove':
-				var p = game.getPlayer(msg.data.player);
+				p = game.getPlayer(msg.data.player);
 				p.direction = new OGE.Direction(msg.data.cos, msg.data.sin);
 				p.x = msg.data.x;
 				p.y = msg.data.y;
 				break;
 			case 'endMove':
-				var p = game.getPlayer(msg.data.player);
+				p = game.getPlayer(msg.data.player);
 				p.direction = null;
 				p.x = msg.data.x;
 				p.y = msg.data.y;
 				break;
 			case 'logoutPlayer':
-				var p = game.getPlayer(msg.data.player);
+				p = game.getPlayer(msg.data.player);
 				p.$img.remove();
 				game.removeBody(p);
 				break;
@@ -38,11 +39,7 @@ GameClient = function(game, nick) {
 	});
 
 	var addBody = function(body, image) {
-		var $img = $('<img>').
-		attr('src', 'images/' + image + '.png').
-		css('left', body.x).
-		css('top', body.y).
-		addClass('body');
+		var $img = $('<img>').attr('src', 'images/' + image + '.png').css('left', body.x).css('top', body.y).addClass('body');
 		$gamePanel.append($img);
 		body.$img = $img;
 	};
@@ -195,7 +192,6 @@ GameClient = function(game, nick) {
 				e.stopPropagation();
 				e.preventDefault();
 				return false;
-				break;
 			}
 		});
 

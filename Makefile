@@ -1,9 +1,8 @@
 LIB_DIR = lib
 SRC_DIR = src
 DIST_DIR = dist
-BOMBERMAN_GAME_DIR = ${LIB_DIR}/oge
+BOMBERMAN_GAME_DIR = ${LIB_DIR}/bomberman-game
 QUNIT_DIR = ${LIB_DIR}/qunit
-UNDERSCORE_DIR = ${LIB_DIR}/underscore
 
 BASE_FILES = ${SRC_DIR}/client.js\
 			 ${SRC_DIR}/gameclient.js\
@@ -23,12 +22,10 @@ lint:
 update: 
 	$(call clone_or_pull, ${BOMBERMAN_GAME_DIR}, https://github.com/eirikb/bomberman-game.git)
 	$(call clone_or_pull, ${QUNIT_DIR}, https://github.com/jquery/qunit.git)
-	$(call clone_or_pull, ${UNDERSCORE_DIR}, https://github.com/documentcloud/underscore.git)
 
 build: 
-	cat ${UNDERSCORE_DIR}/underscore.js > ${BUNDLE_ALL_VERSION}
 	cat ${BOMBERMAN_GAME_DIR}/dist/bomberman.js > ${BUNDLE_VERSION}
-	cat ${BOMBERMAN_GAME_DIR}/dist/bomberman.js >> ${BUNDLE_ALL_VERSION}
+	cat ${BOMBERMAN_GAME_DIR}/dist/bomberman.all.js > ${BUNDLE_ALL_VERSION}
 	cat ${BASE_FILES} >> ${BUNDLE_ALL_VERSION}
 	cat ${BASE_FILES} >> ${BUNDLE_VERSION}
 	java -jar ${CLOSURE_COMPILER} --js ${BUNDLE_VERSION} --js_output_file ${MIN_VERSION}

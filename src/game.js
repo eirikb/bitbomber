@@ -5,7 +5,7 @@
  * @return {Game}
  */
 Game = function(width, height) {
-	this.world = new OGE.World(width, height);
+	this.world = new OGE.World(width, height, 16);
 	this.players = [];
 	this.bombs = [];
 	this.fires = [];

@@ -123,30 +123,29 @@ GameClient = function(game, nick) {
 		});
 
 		var time = new Date().getTime();
-		var lastFrame = 1;
-		var sleepTime = 0;
+		var lastTime = 0;
+		var sleepTime = 50;
 		var frame = 0;
 		var step = function() {
-			time = (new Date().getTime() - time) * 0.9 + lastFrame * 0.1
-			var fps = Math.floor(1000 / time);
-			lastFrame = time;
-			time = new Date().getTime();
-			if (++frame === 10) {
-				$fpsLabel.text('FPS: ' + fps);
+			time = Math.floor((new Date().getTime() - time) * 0.9 + lastTime * 0.1);
+			lastTime = time;
+            if (time > 50 && sleepTime > 45) {
+                sleepTime--;
+            } else if (time < 50 && sleepTime < 55) {
+                sleepTime++;
+            }
+
+			if (++frame === 20) {
+				$fpsLabel.text('Time: ' + time + '(' + sleepTime + ')');
 				frame = 0;
 			}
+			time = new Date().getTime();
 
 			game.world.step();
 			$.each(game.players, function(i, p) {
 				var $img = bodyImages[p.nick];
 				$img.css('left', p.x).css('top', p.y - 4);
 			});
-
-			if (fps > 30) {
-				sleepTime++;
-			} else if (fps < 30) {
-				sleepTime--;
-			}
 
 			setTimeout(step, sleepTime);
 		};

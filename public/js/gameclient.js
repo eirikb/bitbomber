@@ -25,6 +25,11 @@ GameClient = function(game, nick) {
 				p.x = msg.data.x;
 				p.y = msg.data.y;
 				break;
+			case 'logoutPlayer':
+				var p = game.getPlayer(msg.data.player);
+				bodyImages[p.nick].remove();
+				game.removeBody(p);
+				break;
 			}
 		}
 	});
@@ -56,6 +61,9 @@ GameClient = function(game, nick) {
 
 		$.each(game.players, function(i, p) {
 			addBody(p, 'pl1');
+			p.animate = 0;
+			p.sprite = 0;
+			p.sprites = [1, 2, 1, 3];
 		});
 
 		$(document).keydown(function(e) {
@@ -83,6 +91,7 @@ GameClient = function(game, nick) {
 				if (keyCode !== e.keyCode) {
 					keyCode = e.keyCode;
 					player.direction = new OGE.Direction(cos, sin);
+
 					client.send({
 						cmd: 'startMove',
 						data: {
@@ -129,11 +138,11 @@ GameClient = function(game, nick) {
 		var step = function() {
 			time = Math.floor((new Date().getTime() - time) * 0.9 + lastTime * 0.1);
 			lastTime = time;
-            if (time > 50 && sleepTime > 45) {
-                sleepTime--;
-            } else if (time < 50 && sleepTime < 55) {
-                sleepTime++;
-            }
+			if (time > 50 && sleepTime > 45) {
+				sleepTime--;
+			} else if (time < 50 && sleepTime < 55) {
+				sleepTime++;
+			}
 
 			if (++frame === 20) {
 				$fpsLabel.text('Time: ' + time + '(' + sleepTime + ')');
@@ -145,6 +154,26 @@ GameClient = function(game, nick) {
 			$.each(game.players, function(i, p) {
 				var $img = bodyImages[p.nick];
 				$img.css('left', p.x).css('top', p.y - 4);
+				if (p.direction !== null && p.speed > 0) {
+					if (p.lastDirection !== p.direction) {
+						p.animate = 0;
+						p.lastDirection = p.direction;
+					}
+					if (--p.animate < 0) {
+						p.animate = 5;
+						if (++p.sprite >= p.sprites.length) {
+							p.sprite = 0;
+						}
+						var d;
+						if (p.direction.cos !== 0) {
+							d = p.direction.cos > 0 ? 'r': 'l';
+						} else if (p.direction.sin !== 0) {
+							d = p.direction.sin > 0 ? 'd': 'u';
+						}
+						$img.attr('src', '/images/p' + d + p.sprites[p.sprite] + '.png');
+					}
+
+				}
 			});
 
 			setTimeout(step, sleepTime);

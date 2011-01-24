@@ -3,6 +3,29 @@ c = require('commons'),
 _ = require('../lib/underscore/underscore'),
 b = require('bomberman');
 
+var bombs = [];
+var bombGames = {};
+
+exports.startBombTimer = function() {
+	function checkBombs() {
+		for (var i = 0; i < bombs.length; i++) {
+			var bomb = bombs[i];
+			console.log(bomb.x + ' - ' + bomb.y + ' - ' + bomb.timer);
+			if (--bomb.timer === 0) {
+				sendAll(bombGames[bomb], c.success('explodeBomb', {
+					data: {
+						x: bomb.x,
+						y: bomb.y
+					}
+				}));
+				bombs.splice(i, 1);
+				delete bombGames[bomb];
+			}
+		}
+	};
+	setInterval(checkBombs, 1000);
+};
+
 exports.playerLogout = function(cmd, player) {
 	var g = b.playerGames[player.nick];
 	if (c.isSet(g)) {
@@ -56,7 +79,7 @@ exports.joinGame = function(cmd, player) {
 		player.x = x;
 		player.y = y;
 		if (g.addBody(player, true)) {
-            b.playerGames[player.nick] = g;
+			b.playerGames[player.nick]  = g;
 			c.log('Player ' + player.nick + ' join game ' + g.guid);
 			sendAll(g, c.success('joinGame', {
 				player: player.serialize()
@@ -106,8 +129,8 @@ exports.startGame = function(cmd, client, player, game) {
 exports.endMove = function(cmd, player, game, data) {
 	var x = parseInt(data.x, 10);
 	var y = parseInt(data.y, 10);
-    player.x = x;
-    player.y = y;
+	player.x = x;
+	player.y = y;
 	sendAll(game, c.success(cmd, {
 		x: x,
 		y: y,
@@ -120,14 +143,28 @@ exports.startMove = function(cmd, player, game, data) {
 	var sin = parseInt(data.sin, 10);
 	var x = parseInt(data.x, 10);
 	var y = parseInt(data.y, 10);
-    player.x = x;
-    player.y = y;
+	player.x = x;
+	player.y = y;
 	sendAll(game, c.success(cmd, {
 		cos: cos,
 		sin: sin,
 		x: x,
 		y: y,
 		player: player.nick
+	}), player);
+};
+
+exports.placeBomb = function(cmd, player, game, data) {
+	var x = parseInt(data.x);
+	var y = parseInt(data.y);
+	var bomb = new Bomb(x, y, 16, 16);
+	game.addBody(bomb);
+	bombs.push(bomb);
+	bombGames[bomb]  = game;
+	sendAll(game, c.success(cmd, {
+		x: x,
+		y: y,
+		power: player.power
 	}), player);
 };
 

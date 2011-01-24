@@ -20,6 +20,7 @@ exports.playerGuids = {};
 
 function Bomberman(port) {
 	global._ = _;
+    gamehandler.startBombTimer();
 	var server = http.createServer(function(request, response) {
 		var publicFiles = new nodeStatic.Server('public', {
 			cache: false
@@ -90,6 +91,9 @@ function Bomberman(port) {
 				break;
 			case 'startMove':
 				gamehandler.startMove(cmd, p, g, msg.data);
+				break;
+			case 'placeBomb':
+				gamehandler.placeBomb(cmd, p, g, msg.data);
 				break;
 			default:
 				c.log('IO: Unkown command ' + msg.cmd);

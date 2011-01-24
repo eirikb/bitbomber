@@ -5,8 +5,14 @@ BOMBERMAN_GAME_DIR = ${LIB_DIR}/bomberman-game
 QUNIT_DIR = ${LIB_DIR}/qunit
 
 BASE_FILES = ${SRC_DIR}/client.js\
+			 ${SRC_DIR}/lobbyhandler.js\
+			 ${SRC_DIR}/lobbyclient.js\
+			 ${SRC_DIR}/lobbypanel.js\
+			 ${SRC_DIR}/gamehandler.js\
 			 ${SRC_DIR}/gameclient.js\
-			 ${SRC_DIR}/lobbyclient.js
+			 ${SRC_DIR}/gamepanel.js\
+			 ${SRC_DIR}/keyboardhandler.js\
+			 ${SRC_DIR}/factorialtimer.js
 JSLINT4JAVA = ${LIB_DIR}/jslint4java-1.4.6.jar
 CLOSURE_COMPILER = ${LIB_DIR}/compiler.jar
 BUNDLE_VERSION = ${DIST_DIR}/bomberman.js

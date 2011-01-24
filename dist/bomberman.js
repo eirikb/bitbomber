@@ -796,45 +796,216 @@ $(function() {
 	LobbyClient();
 });
 
-GameClient = function(game, nick) {
-	var player = game.getPlayer(nick);
-	var $gamePanel = $('#gamePanel'),
-	$fpsLabel = $('#fpsLabel');
-	var keyCode = 0;
+LobbyClient = function() {
+	var lobbyClient = new LobbyClient(this),
+	gameClient = new GameClient(),
+	gameHandler = new GameHandler(gameClient),
+	game,
+	user,
+	player;
 
-	client.on('message', function(msg) {
-		if (msg.result === 'OK') {
-			var p;
-			switch (msg.cmd) {
-			case 'joinGame':
-				p = Player.deserialize(msg.data.player);
-				game.addBody(p, true);
-				addPlayer(p);
-				break;
-			case 'startMove':
-				p = game.getPlayer(msg.data.player);
-				p.direction = new OGE.Direction(msg.data.cos, msg.data.sin);
-				p.x = msg.data.x;
-				p.y = msg.data.y;
-				break;
-			case 'endMove':
-				p = game.getPlayer(msg.data.player);
-				p.direction = null;
-				p.x = msg.data.x;
-				p.y = msg.data.y;
-				break;
-			case 'logoutPlayer':
-				p = game.getPlayer(msg.data.player);
-				p.$img.remove();
-				game.removeBody(p);
-				break;
-			case 'placeBomb':
-				var bomb = new Bomb(msg.data.x, msg.data.y, 16, 16);
-				placeBomb(bomb);
-				break;
-			}
-		}
+	gameClient.addListener('authPlayer', function(result, data) {
+		console.log("auth: " + result, data);
 	});
+
+	this.createGame = function(fn) {
+		lobbyClient.createGame(function(data) {
+			if (data.result === 'OK') {
+				var game = Game.deserialize(data.data);
+				fn(true);
+			} else {
+				fn(fale);
+			}
+		});
+	};
+
+	this.playNow = function(fn) {
+		lobbyClient.playNow(function(data) {
+			if (data.result === 'OK') {
+				var game = Game.deserialize(data.data);
+				fn(true);
+			} else {
+				fn(false);
+			}
+		});
+
+	};
+
+	this.login = function(nick) {
+		lobbyClient.login(nick, function(data) {
+			if (data.result === 'OK') {
+				user = data.data;
+				gameClient.send('authPlayer', user.guid);
+				fn(triue);
+			} else {
+				fn(false);
+			}
+		});
+	};
+};
+
+LobbyClient = function() {
+	var user;
+
+	this.createGame = function(fn) {
+		$.getJSON('/lobby?cmd=createGame&guid=' + user.guid, function(data) {
+			utils.log(data);
+			fn(data);
+		});
+	};
+
+	this.playNow = function(fn) {
+		$.getJSON('/lobby?cmd=joinGame&guid=' + user.guid, function(data) {
+			utils.log(data);
+		});
+	};
+
+	this.login = function(nick, fn) {
+		$.getJSON('/lobby?cmd=loginPlayer&nick=' + $nickField.val(), function(data) {
+			utils.log(data);
+			if (data.result === 'OK') {
+				user = data.data;
+			}
+			fn(data);
+		});
+	};
+
+	init();
+};
+
+LobbyPanel = function(lobbyHandler) {
+	var $loginPanel = $('#loginPanel'),
+	$loginButton = $('#loginButton'),
+	$lobbyPanel = $('#lobbyPanel'),
+	$nickField = $('#nickField'),
+	$playNowButton = $('#playNowButton'),
+	$createGameButton = $('#createGameButton');
+
+	var init = function() {
+		$nickField.keypress(function(e) {
+			if (e.keyCode === 13) {
+				login();
+			}
+		});
+		$loginButton.click(function() {
+			login();
+		});
+
+		$playNowButton.click(function() {
+			playNow();
+		});
+
+		$createGameButton.click(function() {
+			createGame();
+		});
+
+		$nickField.focus();
+	};
+
+	var showLobby = function() {
+		$loginPanel.hide();
+		$lobbyPanel.show();
+	};
+
+	var createGame = function() {
+		lobbyHandler.createGame(function(result) {
+			if (result) {
+				$lobbyPanel.hide();
+			}
+		});
+	};
+
+	var playNow = function() {
+		lobbyHandler.playNow(function(result) {
+			$lobbyPanel.hide();
+		});
+	};
+
+	var login = function() {
+		if ($nickField.val().length > 0) {
+			lobbyHandler.login($nickField.val(), function(result) {
+				if (result) {
+					showLobby();
+				} else {
+					$loginPanel.children('span').text('Nick taken!');
+				}
+			});
+		}
+	};
+
+	init();
+};
+
+GameHandler = function(gameClient) {
+
+	gameClient.addListener('joinGame', function(data) {
+		p = Player.deserialize(msg.data.player);
+		game.addBody(p, true);
+		addPlayer(p);
+	});
+
+	gameClient.addListener('startMove', function(data) {
+		p = game.getPlayer(msg.data.player);
+		p.direction = new OGE.Direction(msg.data.cos, msg.data.sin);
+		p.x = msg.data.x;
+		p.y = msg.data.y;
+	});
+
+	gameClient.addListener('endMove', function(data) {
+		p = game.getPlayer(msg.data.player);
+		p.direction = null;
+		p.x = msg.data.x;
+		p.y = msg.data.y;
+	});
+
+	gameClient.addListener('logoutPlayer', function(data) {
+		p = game.getPlayer(msg.data.player);
+		p.$img.remove();
+		game.removeBody(p);
+	});
+
+	gameClient.addListener('placeBomb', function(data) {
+		var bomb = new Bomb(msg.data.x, msg.data.y, 16, 16);
+		placeBomb(bomb);
+	});
+
+};
+
+GameClient = function() {
+	var client = new io.Socket(),
+	listeners = {};
+
+	this.addListener = function(trigger, fn) {
+		if (typeof listeners[trigger]  === 'undefined') {
+			listeners[trigger] = [];
+		}
+		listeners[trigger].push(fn);
+	};
+
+	this.send = function(cmd, data) {
+		client.send({
+			cmd: cmd,
+			data: data
+		});
+	};
+
+	client.connect();
+	client.on('message', function(msg) {
+		_.each(listeners[msg.cmd], function(fn) {
+			fn(msg.result, msg.data);
+		});
+	});
+};
+
+GamePanel = function(gameClient) {
+	var $gamePanel = $('#gamePanel'),
+	$fpsLabel = $('#fpsLabel'),
+	keyboardHandler = new KeyboardHandler(),
+	factorialTimer = new FactorialTimer();
+
+	this.init = function(gameHandler) {
+		$gamePanel.find('*').remove();
+	};
 
 	var addBody = function(body, image) {
 		var $img = $('<img>').attr('src', 'images/' + image + '.png').css('left', body.x).css('top', body.y).addClass('body');
@@ -908,221 +1079,140 @@ GameClient = function(game, nick) {
 			addPlayer(p);
 		});
 
-		$(document).keydown(function(e) {
-			var cos = 0,
-			sin = 0,
-			prevent = false;
-			switch (e.keyCode) {
-			case 32:
-				if (player.bombs > 0) {
-					player.bombs--;
-					var bomb = new Bomb(Math.floor((player.x + 8) / 16) * 16, Math.floor((player.y + 8) / 16) * 16, 16, 16);
-					bomb.power = player.power;
-					placeBomb(bomb);
-					client.send({
-						cmd: 'placeBomb',
-						data: {
-							x: bomb.x,
-							y: bomb.y
-						}
-					});
-				}
-				prevent = true;
+		keyboardHandler.keydown(function(dir) {
+			switch (dir) {
+			case 'space':
+				var bomb = gameHandler.placeBomb();
+				placeBomb(bomb);
 				break;
-			case 37:
-			case 65:
+			case 'left':
 				cos = - 1;
 				break;
-			case 38:
-			case 87:
+			case 'up':
 				sin = - 1;
 				break;
-			case 39:
-			case 68:
+			case 'right':
 				cos = 1;
 				break;
-			case 40:
-			case 83:
+			case 'down':
 				sin = 1;
 				break;
 			}
 			if (cos !== 0 || sin !== 0) {
-				if (keyCode !== e.keyCode) {
-					keyCode = e.keyCode;
-					player.direction = new OGE.Direction(cos, sin);
-					client.send({
-						cmd: 'startMove',
-						data: {
-							cos: cos,
-							sin: sin,
-							x: player.x,
-							y: player.y
-						}
-					});
-				}
-				prevent = true;
+				gameHandler.startMove(cos, sin);
 			}
-			if (prevent) {
-				e.stopPropagation();
-				e.preventDefault();
-				return false;
-			}
-
 		}).keyup(function(e) {
-			if (e.keyCode === keyCode) {
-				keyCode = 0;
-				player.direction = null;
-				client.send({
-					cmd: 'endMove',
-					data: {
-						x: player.x,
-						y: player.y
-					}
-				});
-			}
-		}).keypress(function(e) {
-			switch (e.keyCode) {
-			case 32:
-			case 37:
-			case 38:
-			case 39:
-			case 40:
-				e.stopPropagation();
-				e.preventDefault();
-				return false;
-			}
+			gameHandler.endMove();
 		});
 
-		var time = new Date().getTime();
-		var lastTime = 0;
-		var sleepTime = 50;
-		var frame = 0;
-		var step = function() {
-			time = Math.floor((new Date().getTime() - time) * 0.9 + lastTime * 0.1);
-			lastTime = time;
-			if (time > 50 && sleepTime > 45) {
-				sleepTime--;
-			} else if (time < 50 && sleepTime < 55) {
-				sleepTime++;
-			}
-
+		factorialTimer.start(function(time) {
+			gameHandler.step();
 			if (++frame === 20) {
-				$fpsLabel.text('Time: ' + time + '(' + sleepTime + ')');
+				$fpsLabel.text('Time: ' + time);
 				frame = 0;
 			}
-			time = new Date().getTime();
-
-			game.world.step();
 			$.each(game.players, function(i, p) {
 				animatePlayer(p);
 			});
 			$.each(game.bombs, function(i, b) {
 				animateBomb(b);
 			});
-
-			setTimeout(step, sleepTime);
-		};
-
-		step();
-
+		});
 	};
-
-	init();
 };
 
-LobbyClient = function() {
-	var gameClient, game, user, player;
+KeyboardHandler = function() {
+	var keyCode, keydown, keyup;
 
-	var $loginPanel = $('#loginPanel'),
-	$loginButton = $('#loginButton'),
-	$lobbyPanel = $('#lobbyPanel'),
-	$nickField = $('#nickField'),
-	$playNowButton = $('#playNowButton'),
-	$createGameButton = $('#createGameButton');
-
-	var init = function() {
-		$nickField.keypress(function(e) {
-			if (e.keyCode === 13) {
-				login();
-			}
-		});
-		$loginButton.click(function() {
-			login();
-		});
-
-		$playNowButton.click(function() {
-			playNow();
-		});
-
-		$createGameButton.click(function() {
-			createGame();
-		});
-
-		$nickField.focus();
+	this.keydown = function(callback) {
+		keydown = fn;
+		return this;
 	};
 
-	var startClient = function() {
-		client = new io.Socket();
-		client.connect();
-		client.on('connect', function() {
-			if (localStorage.guid) {
-				client.send({
-					cmd: 'authPlayer',
-					data: {
-						guid: user.guid
-					}
-				});
-			}
-		});
-		client.on('message', function(msg) {
-			utils.log(msg);
-		});
+	this.keyup = function(callback) {
+		keyup = fn;
+		return this;
 	};
 
-	var showLobby = function() {
-		$loginPanel.hide();
-		$lobbyPanel.show();
-	};
-
-	var createGame = function() {
-		$.getJSON('/lobby?cmd=createGame&guid=' + user.guid, function(data) {
-			utils.log(data);
-			if (data.result === 'OK') {
-				var game = Game.deserialize(data.data);
-				gameClient = new GameClient(game, user.nick);
-				$lobbyPanel.hide();
-			}
-		});
-	};
-
-	var playNow = function() {
-		$.getJSON('/lobby?cmd=joinGame&guid=' + user.guid, function(data) {
-			utils.log(data);
-			if (data.result === 'OK') {
-				var game = Game.deserialize(data.data);
-				gameClient = new GameClient(game, user.nick);
-				$lobbyPanel.hide();
-			}
-		});
-	};
-
-	var login = function() {
-		if ($nickField.val().length > 0) {
-			$.getJSON('/lobby?cmd=loginPlayer&nick=' + $nickField.val(), function(data) {
-				utils.log(data);
-				if (data.result === 'OK') {
-					user = data.data;
-					localStorage.guid = user.guid;
-					startClient();
-					showLobby();
-				} else {
-					$loginPanel.children('span').text('Nick taken!');
-				}
-				return false;
-			});
+	$(document).keydown(function(e) {
+		var prevent = false,
+		dir = null;
+		switch (e.keyCode) {
+		case 32:
+			dir = 'space';
+			break;
+		case 37:
+		case 65:
+			dir = 'left';
+			break;
+		case 38:
+		case 87:
+			dir = 'up';
+			break;
+		case 39:
+		case 68:
+			dir = 'right';
+			break;
+		case 40:
+		case 83:
+			dir = 'down';
+			break;
 		}
+		if (dir !== null && keyCode !== e.keyCode) {
+			keyCode = e.keyCode;
+			prevent = true;
+			keydown(dir);
+		}
+		if (prevent) {
+			e.stopPropagation();
+			e.preventDefault();
+			return false;
+		}
+
+	}).keyup(function(e) {
+		if (e.keyCode === keyCode) {
+			keyCode = 0;
+			keyup();
+		}
+	}).keypress(function(e) {
+		switch (e.keyCode) {
+		case 32:
+		case 37:
+		case 38:
+		case 39:
+		case 40:
+			e.stopPropagation();
+			e.preventDefault();
+			return false;
+		}
+	});
+};
+
+FactorialTimer = function() {
+	var time = new Date().getTime(),
+	lastTime = 0,
+	sleepTime = 50,
+	frame = 0,
+	callback;
+
+	this.start = function(callbackFn) {
+		callback = callbackFn;
+		step();
 	};
 
-	init();
+	var step = function() {
+		time = Math.floor((new Date().getTime() - time) * 0.9 + lastTime * 0.1);
+		lastTime = time;
+		if (time > 50 && sleepTime > 45) {
+			sleepTime--;
+		} else if (time < 50 && sleepTime < 55) {
+			sleepTime++;
+		}
+		callback(time);
+
+		time = new Date().getTime();
+
+		setTimeout(step, sleepTime);
+	};
 };
 

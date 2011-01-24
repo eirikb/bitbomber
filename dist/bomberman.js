@@ -604,6 +604,22 @@ Bomb = function(x, y, width, height) {
 
 Bomb.prototype = Object.construct_prototype(OGE.Body);
 
+Bomb.prototype.serialize = function() {
+	return {
+		x: this.x,
+		y: this.y,
+		width: this.width,
+		height: this.height,
+		size: this.width,
+		timer: this.height,
+		power: this.speed
+	};
+};
+
+Bomb.deserialize = function(data) {
+	return _.extend(new Bomb(data.x, data.y, data.width, data.height), data);
+};
+
 /**
  * Fire object
  *
@@ -637,7 +653,7 @@ Powerup.prototype = Object.construct_prototype(OGE.Body);
  * @return {Game}
  */
 Game = function(width, height) {
-	this.world = new OGE.World(width, height);
+	this.world = new OGE.World(width, height, 16);
 	this.players = [];
 	this.bombs = [];
 	this.fires = [];
@@ -659,7 +675,7 @@ Game.prototype.addBody = function(body, active) {
 		}
 		this.players.push(body);
 	} else if (body instanceof Bomb) {
-		this.bombs.push(bomb);
+		this.bombs.push(body);
 	}
 	return true;
 };

@@ -27,7 +27,7 @@ Game.prototype.addBody = function(body, active) {
 		}
 		this.players.push(body);
 	} else if (body instanceof Bomb) {
-		this.bombs.push(bomb);
+		this.bombs.push(body);
 	}
 	return true;
 };

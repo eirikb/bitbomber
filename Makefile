@@ -3,6 +3,7 @@ NODE_STATIC_DIR = ${LIB_DIR}/node-static
 SOCKET_IO_DIR = ${LIB_DIR}/socket.io
 UNDERSCORE_DIR = ${LIB_DIR}/underscore
 BOMBERMAN_CLIENT_DIR = ${LIB_DIR}/bomberman-client
+BOMBERMAN_GAME_DIR = ${LIB_DIR}/bomberman-game
 
 all: update
 
@@ -10,6 +11,7 @@ update:
 	$(call clone_or_pull, ${NODE_STATIC_DIR}, https://github.com/cloudhead/node-static.git)
 	$(call clone_or_pull, ${SOCKET_IO_DIR}, https://github.com/LearnBoost/Socket.IO-node.git)
 	$(call clone_or_pull, ${BOMBERMAN_CLIENT_DIR}, https://github.com/eirikb/bomberman-client.git)
+	$(call clone_or_pull, ${BOMBERMAN_GAME_DIR}, https://github.com/eirikb/bomberman-game.git)
 	$(call clone_or_pull, ${UNDERSCORE_DIR}, https://github.com/documentcloud/underscore.git)
 
 hack:

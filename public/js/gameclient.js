@@ -63,36 +63,43 @@ GameClient = function(game, nick) {
 			sin = 0;
 			switch (e.keyCode) {
 			case 37:
+			case 65:
 				cos = - 1;
 				break;
 			case 38:
+			case 87:
 				sin = - 1;
 				break;
 			case 39:
+			case 68:
 				cos = 1;
 				break;
 			case 40:
+			case 83:
 				sin = 1;
 				break;
 			}
 			if (cos !== 0 || sin !== 0) {
-				keyCode = e.keyCode;
-				player.direction = new OGE.Direction(cos, sin);
-				client.send({
-					cmd: 'startMove',
-					data: {
-						cos: cos,
-						sin: sin,
-						x: player.x,
-						y: player.y
-					}
-				});
+				if (keyCode !== e.keyCode) {
+					keyCode = e.keyCode;
+					player.direction = new OGE.Direction(cos, sin);
+					client.send({
+						cmd: 'startMove',
+						data: {
+							cos: cos,
+							sin: sin,
+							x: player.x,
+							y: player.y
+						}
+					});
+				}
 				e.stopPropagation();
 				e.preventDefault();
 				return false;
 			}
 		}).keyup(function(e) {
 			if (e.keyCode === keyCode) {
+				keyCode = 0;
 				player.direction = null;
 				client.send({
 					cmd: 'endMove',

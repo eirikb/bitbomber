@@ -22,13 +22,6 @@ hack:
 		ln -s ../${OGE_DIR}/dist/oge.js ./; \
 		ln -s ../${UNDERSCORE_DIR}/underscore.js ./;\
 		ln -s ../${BOMBERMAN_CLIENT_DIR}/src/* ./;
-devhack:
-	cd public;\
-		ln -s ../../bomberman-client/public/* ./; \
-		ln -s ../../bomberman-client/lib/qunit/qunit/qunit.* ./; \
-		ln -s ../${OGE_DIR}/dist/oge.js ./; \
-		ln -s ../${UNDERSCORE_DIR}/underscore.js ./;\
-		ln -s ../../bomberman-client/src/* ./;
 
 define clone_or_pull
 -@@if test ! -d $(strip ${1})/.git; then \
@@ -41,4 +34,4 @@ define clone_or_pull
 
 endef
 
-.PHONY: all update
+.PHONY: all update hack

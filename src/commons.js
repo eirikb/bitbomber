@@ -24,6 +24,14 @@ exports.jsonEnd = function(response, obj)  {
 };
 
 exports.error = function(cmd, code, msg) {
+    console.log('cmd', cmd);
+    console.log('code', code);
+    console.log('msg', msg);
+    if (arguments.length === 1) {
+        msg = code;
+        code = cmd;
+        delete cmd;
+    }
 	return {
 		cmd: cmd,
 		result: 'ERROR',
@@ -33,6 +41,10 @@ exports.error = function(cmd, code, msg) {
 };
 
 exports.success = function(cmd, data, msg) {
+    if (arguments.length === 1) {
+        data = cmd;
+        delete cmd;
+    }
 	return {
 		cmd: cmd,
 		result: 'OK',

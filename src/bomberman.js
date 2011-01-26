@@ -2,11 +2,13 @@ var http = require('http'),
 nodeStatic = require('../lib/node-static/lib/node-static'),
 c = require('commons'),
 url = require('url'),
-lobbyhandler = require('lobbyhandler'),
-gamehandler = require('gamehandler'),
+players = require('players'),
+games = require('games'),
+ingame = require('ingame'),
 OGE = require('../lib/bomberman-game/dist/bomberman'),
 io = require('../lib/socket.io/lib/socket.io'),
 b = require('bomberman');
+
 global._ = require('../lib/underscore/underscore');
 
 exports.playerGames = {};
@@ -20,7 +22,7 @@ exports.playerGuids = {};
 
 function Bomberman(port) {
 	global._ = _;
-    gamehandler.startBombTimer();
+	ingame.startBombTimer();
 	var server = http.createServer(function(request, response) {
 		var publicFiles = new nodeStatic.Server('public', {
 			cache: false
@@ -33,30 +35,29 @@ function Bomberman(port) {
 
 				var res;
 				var p = b.playerGuids[params.guid];
-				var cmd = params.cmd;
 				switch (params.cmd) {
 				case 'loginPlayer':
-					res = lobbyhandler.loginPlayer(cmd, params.guid, params.nick, p);
+					res = players.loginPlayer(params.guid, params.nick, p);
 					break;
 				case 'logoutPlayer':
-					res = lobbyhandler.logoutPlayer(cmd, p);
+					res = players.logoutPlayer(p);
 					break;
 				case 'createGame':
 					if (c.isSet(p)) {
-						res = gamehandler.createGame(cmd, p, params.name);
+						res = games.createGame(p, params.name);
 					} else {
-						res = c.error(params.cmd, 0, 'UNKNOWN PLAYER');
+						res = c.error(0, 'UNKNOWN PLAYER');
 					}
 					break;
 				case 'joinGame':
 					if (c.isSet(p)) {
-						res = gamehandler.joinGame(cmd, p, params.name);
+						res = games.joinGame(p, params.name);
 					} else {
-						res = c.error(params.cmd, 0, 'UNKNOWN PLAYER'); 
+						res = c.error(0, 'UNKNOWN PLAYER'); 
 					}
 					break;
 				default:
-					res = c.error(params.cmd, 0, 'UNKNOWN COMMAND');
+					res = c.error(0, 'UNKNOWN COMMAND');
 				}
 				c.jsonEnd(response, res);
 			} else {
@@ -81,19 +82,19 @@ function Bomberman(port) {
 			var cmd = msg.cmd;
 			switch (cmd) {
 			case 'authPlayer':
-				gamehandler.authPlayer(cmd, client, msg.data.guid);
+				players.authPlayer(cmd, client, msg.data.guid);
 				break;
 			case 'startGame':
-				gamehandler.startGame(cmd, client, p, g);
+				games.startGame(cmd, client, p, g);
 				break;
 			case 'endMove':
-				gamehandler.endMove(cmd, p, g, msg.data);
+				ingame.endMove(cmd, p, g, msg.data);
 				break;
 			case 'startMove':
-				gamehandler.startMove(cmd, p, g, msg.data);
+				ingame.startMove(cmd, p, g, msg.data);
 				break;
 			case 'placeBomb':
-				gamehandler.placeBomb(cmd, p, g, msg.data);
+				ingame.placeBomb(cmd, p, g, msg.data);
 				break;
 			default:
 				c.log('IO: Unkown command ' + msg.cmd);
@@ -102,7 +103,7 @@ function Bomberman(port) {
 		});
 		client.on('disconnect', function() {
 			var player = b.sessionPlayers[client.sessionId];
-			lobbyhandler.logoutPlayer('logoutPlayer', player);
+			players.logoutPlayer('logoutPlayer', player);
 		});
 	});
 

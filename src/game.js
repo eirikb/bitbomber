@@ -63,7 +63,7 @@ Game.prototype.explodeBomb = function(bomb, data) {
 								self.explodeBomb(body, data);
 							}
 						}
-					};
+					}
 				}
 			}
 		}

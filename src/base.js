@@ -22,7 +22,7 @@
  * THE SOFTWARE.
  *
  * @author Eirik Brandtzæg <eirikb@eirikb.no>
- * @Version 0.2
+ * @Version 0.3
  */
 
 // Prevent protoype inheritance from calling constructors twice when using apply

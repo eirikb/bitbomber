@@ -1,13 +1,12 @@
-LobbyHandler = function(bomberman) {
-	var lobbyClient = new LobbyClient(this),
-	lobbyPanel = new LobbyPanel(this),
+LobbyHandler = function(gameHandler, httpClient, socketClient) {
+	var httpClient = new HttpClient(this),
 	user;
 
 	this.createGame = function(fn) {
-		lobbyClient.createGame(function(data) {
+		httpClient.createGame(function(data) {
 			if (data.result === 'OK') {
 				var game = Game.deserialize(data.data);
-				bomberman.startGame(game, user.nick);
+				gameHandler.startGame(game, user.nick);
 				fn(true);
 			} else {
 				fn(fale);
@@ -16,10 +15,10 @@ LobbyHandler = function(bomberman) {
 	};
 
 	this.playNow = function(fn) {
-		lobbyClient.playNow(function(data) {
+		httpClient.playNow(function(data) {
 			if (data.result === 'OK') {
 				var game = Game.deserialize(data.data);
-				bomberman.startGame(game, user.nick);
+				gameHandler.startGame(game, user.nick);
 				fn(true);
 			} else {
 				fn(false);
@@ -29,10 +28,12 @@ LobbyHandler = function(bomberman) {
 	};
 
 	this.login = function(nick, fn) {
-		lobbyClient.login(nick, function(data) {
+		httpClient.login(nick, function(data) {
 			if (data.result === 'OK') {
 				user = data.data;
-				bomberman.login(user.guid);
+				socketClient.send('authPlayer', {
+					guid: user.guid
+				});
 				fn(true);
 			} else {
 				fn(false);

@@ -1,12 +1,10 @@
 GamePanel = function(gameHandler) {
 	var $gamePanel = $('#gamePanel'),
 	$fpsLabel = $('#fpsLabel'),
-	keyboardHandler,
-	factorialTimer;
+	keyboardHandler;
 
 	this.startGame = function(game) {
 		keyboardHandler = new KeyboardHandler();
-		factorialTimer = new FactorialTimer();
 
 		$gamePanel.find('*').remove();
 		$gamePanel.show();
@@ -54,8 +52,7 @@ GamePanel = function(gameHandler) {
 		});
 
 		var frame = 0;
-		factorialTimer.start(function(time) {
-			gameHandler.step();
+		gameHandler.onStep(function(tim) {
 			if (++frame === 20) {
 				$fpsLabel.text('Time: ' + time);
 				frame = 0;

@@ -1,4 +1,4 @@
-GameClient = function() {
+SocketClient = function() {
 	var client = new io.Socket(),
 	listeners = {};
 

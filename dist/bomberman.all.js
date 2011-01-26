@@ -1545,7 +1545,11 @@ Game.deserialize = function(data) {
 
 var $infoArea;
 var utils = {};
-utils.log = function(msg) {
+utils.log = function(cmd, msg) {
+    if (arguments.length === 1) {
+        msg = cmd;
+    }
+    msg.cmd = msg.cmd || cmd;
 	if (msg.cmd && msg.result) {
 		if (typeof console !== 'undefined' && console !== null) {
 			console.log(msg.cmd, msg);
@@ -1626,20 +1630,20 @@ LobbyClient = function() {
 
 	this.createGame = function(fn) {
 		$.getJSON('/lobby?cmd=createGame&guid=' + user.guid, function(data) {
-			utils.log(data);
+			utils.log('createGame', data);
 			fn(data);
 		});
 	};
 
 	this.playNow = function(fn) {
 		$.getJSON('/lobby?cmd=joinGame&guid=' + user.guid, function(data) {
-			utils.log(data);
+			utils.log('playNow', data);
 		});
 	};
 
 	this.login = function(nick, fn) {
 		$.getJSON('/lobby?cmd=loginPlayer&nick=' + nick, function(data) {
-			utils.log(data);
+			utils.log('loginPlayer', data);
 			if (data.result === 'OK') {
 				user = data.data;
 			}

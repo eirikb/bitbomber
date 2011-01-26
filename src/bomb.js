@@ -7,7 +7,7 @@
 Bomb = function(x, y, width, height) {
 	OGE.Body.apply(this, arguments);
 	this.size = 1;
-	this.timer = 10;
+	this.timer = 4;
 	this.power = 1;
 };
 

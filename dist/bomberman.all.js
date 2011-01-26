@@ -1297,7 +1297,7 @@ OGE.World.prototype.slideBody = function(body, direction) {
  * THE SOFTWARE.
  *
  * @author Eirik Brandtzæg <eirikb@eirikb.no>
- * @Version 0.3
+ * @Version 0.4
  */
 
 // Prevent protoype inheritance from calling constructors twice when using apply
@@ -1419,8 +1419,17 @@ Game = function(width, height) {
 	this.maxPlayers = 4;
 };
 
+Game.prototype.getBomb = function(x, y) {
+	for (var i = 0; i < this.bombs.length; i++) {
+		if (this.bombs[i].x === x && this.bombs[i].y === y) {
+			return this.bombs[i];
+		}
+	}
+    return null;
+};
+
 Game.prototype.removeBoxes = function(bomb, data) {
-    var self = this;
+	var self = this;
 	_.each(data.bodies, function(body) {
 		if (body instanceof Box && body.armor === bomb.power) {
 			self.removeBody(body);
@@ -1456,12 +1465,12 @@ Game.prototype.explodeBomb = function(bomb, data) {
 								return;
 							} else {
 								self.removeBody(body);
-                                if (!data.fires[x]) {
-                                    data.fires[x] = [];
-                                } 
-                                if (!data.fires[x][y]) {
-                                    data.fires[x][y] = firevar;
-                                }
+								if (!data.fires[x]) {
+									data.fires[x] = [];
+								}
+								if (!data.fires[x][y]) {
+									data.fires[x][y] = firevar;
+								}
 							}
 							if (body instanceof Bomb) {
 								self.explodeBomb(body, data);

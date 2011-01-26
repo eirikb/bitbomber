@@ -18,6 +18,7 @@ Player = function(x, y, width, height, nick) {
 	this.life = 3;
 	this.armor = 0;
 	this.bombs = 1;
+    this.power = 1;
 };
 
 Player.prototype = Object.construct_prototype(OGE.Body);

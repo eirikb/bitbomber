@@ -556,6 +556,7 @@ Player = function(x, y, width, height, nick) {
 	this.life = 3;
 	this.armor = 0;
 	this.bombs = 1;
+    this.power = 1;
 };
 
 Player.prototype = Object.construct_prototype(OGE.Body);
@@ -789,7 +790,7 @@ Game.prototype.createBlocks = function(size) {
 	for (var y = 1; y < this.world.height / size - 2; y += 2) {
 		for (var x = 1; x < this.world.width / size - 2; x += 2) {
 			var b = new Box(x * size, y * size, size, size);
-			b.armor = 1;
+			b.armor = 2;
 			this.blocks.push(b);
 			this.addBody(b);
 		}

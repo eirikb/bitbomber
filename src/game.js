@@ -15,6 +15,68 @@ Game = function(width, height) {
 	this.maxPlayers = 4;
 };
 
+Game.prototype.removeBoxes = function(bomb, data) {
+    var self = this;
+	_.each(data.bodies, function(body) {
+		if (body instanceof Box && body.armor === bomb.power) {
+			self.removeBody(body);
+		}
+	});
+};
+
+Game.prototype.explodeBomb = function(bomb, data) {
+	if (arguments.length === 1) {
+		data = {
+			x: bomb.x,
+			y: bomb.y,
+			bodies: [],
+			fires: []
+		};
+	}
+	var w = bomb.size * bomb.width,
+	h = bomb.size * bomb.height,
+	self = this;
+	this.removeBody(bomb);
+	var checkHit = function(minX, minY, maxX, maxY, firevar) {
+		for (var x = bomb.x + minX; x <= bomb.x + maxX; x += bomb.width) {
+			for (var y = bomb.y + minY; y <= bomb.y + maxY; y += bomb.height) {
+				if (x >= 0 && y >= 0 && x < self.world.width && y < self.world.height) {
+					var b = self.world.getBodies(x, y, bomb.width, bomb.height);
+					for (var i = 0; i < b.length; i++) {
+						var body = b[i];
+						if (body !== bomb && body.intersects(x, y, bomb.width, bomb.height)) {
+							if (!_.contains(data.bodies, body)) {
+								data.bodies.push(body);
+							}
+							if (body.armor >= bomb.power) {
+								return;
+							} else {
+								self.removeBody(body);
+                                if (!data.fires[x]) {
+                                    data.fires[x] = [];
+                                } 
+                                if (!data.fires[x][y]) {
+                                    data.fires[x][y] = firevar;
+                                }
+							}
+							if (body instanceof Bomb) {
+								self.explodeBomb(body, data);
+							}
+						}
+					};
+				}
+			}
+		}
+	};
+
+	checkHit( - w, 0, - bomb.width, 0, 'l');
+	checkHit( + bomb.width, 0, + w, 0, 'r');
+	checkHit(0, - h, 0, - bomb.height, 'u');
+	checkHit(0, + bomb.height, 0, + h, 'd');
+
+	return data;
+};
+
 Game.prototype.addBody = function(body, active) {
 	if (!this.world.addBody(body, active)) {
 		return false;

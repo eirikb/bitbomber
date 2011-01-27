@@ -1472,7 +1472,9 @@ Game.prototype.explodeBomb = function(bomb, data) {
 								data.bodies.push(body);
 							}
 							if (body.armor >= bomb.power) {
-								data.fires[x][y] = null;
+								if (data.fires[x] && data.fires[x][y]) {
+									data.fires[x][y] = null;
+								}
 								return;
 							} else {
 								self.removeBody(body);

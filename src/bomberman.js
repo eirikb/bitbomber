@@ -96,6 +96,12 @@ function Bomberman(port) {
 			case 'placeBomb':
 				ingame.placeBomb(cmd, p, g, msg.data);
 				break;
+			case 'playerDead':
+				ingame.playerDead(cmd, p, g, msg.data);
+				break;
+			case 'resurectPlayer':
+				ingame.resurectPlayer(cmd, p, g, msg.data);
+				break;
 			default:
 				c.log('IO: Unkown command ' + msg.cmd);
 				break;

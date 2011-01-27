@@ -91,3 +91,15 @@ exports.placeBomb = function(cmd, player, game, data) {
 	}), player);
 };
 
+exports.playerDead = function(cmd, player, game, data) {
+	sendAll(game, c.success(cmd, {
+		player: player.nick
+	}), player);
+};
+
+exports.resurectPlayer = function(cmd, player, game, data) {
+	sendAll(game, c.success(cmd, {
+		player: player.nick
+	}));
+};
+

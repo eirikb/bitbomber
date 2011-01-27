@@ -3,12 +3,12 @@ SRC_DIR = src
 DIST_DIR = dist
 BOMBERMAN_GAME_DIR = ${LIB_DIR}/bomberman-game
 
-BASE_FILES = ${SRC_DIR}/client.js\
+BASE_FILES = ${SRC_DIR}/onload.js\
 			 ${SRC_DIR}/lobbyhandler.js\
-			 ${SRC_DIR}/lobbyclient.js\
+			 ${SRC_DIR}/httpclient.js\
 			 ${SRC_DIR}/lobbypanel.js\
 			 ${SRC_DIR}/gamehandler.js\
-			 ${SRC_DIR}/gameclient.js\
+			 ${SRC_DIR}/socketclient.js\
 			 ${SRC_DIR}/gamepanel.js\
 			 ${SRC_DIR}/keyboardhandler.js\
 			 ${SRC_DIR}/factorialtimer.js

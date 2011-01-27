@@ -1,4 +1,4 @@
-GamePanel = function(gameHandler, socketClient) {
+GamePanel = function(gameHandler) {
 	var $gamePanel = $('#gamePanel'),
 	$fpsLabel = $('#fpsLabel'),
 	keyboardHandler,
@@ -114,7 +114,19 @@ GamePanel = function(gameHandler, socketClient) {
 	});
 
 	gameHandler.addListener('placeBomb', function(bomb) {
-            placeBomb(bomb);
+		placeBomb(bomb);
+	});
+
+	gameHandler.addListener('meDead', function(player) {
+		player.$img.remove();
+	});
+
+	gameHandler.addListener('playerDead', function(player) {
+		player.$img.remove();
+	});
+
+	gameHandler.addListener('resurectPlayer', function(player) {
+		$gamePanel.append(player.$img);
 	});
 
 	var addBody = function(body, image) {

@@ -525,7 +525,7 @@ OGE.World.prototype.slideBody = function(body, direction) {
  * THE SOFTWARE.
  *
  * @author Eirik Brandtzæg <eirikb@eirikb.no>
- * @Version 0.1
+ * @Version 0.4
  */
 
 // Prevent protoype inheritance from calling constructors twice when using apply
@@ -556,6 +556,7 @@ Player = function(x, y, width, height, nick) {
 	this.life = 3;
 	this.armor = 0;
 	this.bombs = 1;
+    this.power = 1;
 };
 
 Player.prototype = Object.construct_prototype(OGE.Body);
@@ -598,7 +599,7 @@ Box.prototype = Object.construct_prototype(OGE.Body);
 Bomb = function(x, y, width, height) {
 	OGE.Body.apply(this, arguments);
 	this.size = 1;
-	this.timer = 10;
+	this.timer = 4;
 	this.power = 1;
 };
 
@@ -645,6 +646,84 @@ Game = function(width, height) {
 	this.bricks = [];
 
 	this.maxPlayers = 4;
+};
+
+Game.prototype.getBomb = function(x, y) {
+	for (var i = 0; i < this.bombs.length; i++) {
+		if (this.bombs[i].x === x && this.bombs[i].y === y) {
+			return this.bombs[i];
+		}
+	}
+	return null;
+};
+
+Game.prototype.removeBoxes = function(bomb, data) {
+	var self = this;
+	_.each(data.bodies, function(body) {
+		if (body instanceof Box && body.armor === bomb.power) {
+			self.removeBody(body);
+		}
+	});
+};
+
+Game.prototype.explodeBomb = function(bomb, data) {
+	if (arguments.length === 1) {
+		data = {
+			x: bomb.x,
+			y: bomb.y,
+			bodies: [],
+			fires: []
+		};
+	}
+	var w = bomb.size * bomb.width,
+	h = bomb.size * bomb.height,
+	self = this;
+	this.removeBody(bomb);
+	var insertFlame = function(x, y, firevar) {
+		if (!data.fires[x]) {
+			data.fires[x] = [];
+		}
+		if (!data.fires[x][y]) {
+			data.fires[x][y] = firevar;
+		}
+	};
+	insertFlame(bomb.x, bomb.y, 'c');
+	var checkHit = function(minX, minY, maxX, maxY, firevar) {
+		for (var x = bomb.x + minX; x <= bomb.x + maxX; x += bomb.width) {
+			for (var y = bomb.y + minY; y <= bomb.y + maxY; y += bomb.height) {
+				if (x >= 0 && y >= 0 && x < self.world.width && y < self.world.height) {
+					var b = self.world.getBodies(x, y, bomb.width, bomb.height);
+					for (var i = 0; i < b.length; i++) {
+						var body = b[i];
+						if (body !== bomb && body.intersects(x, y, bomb.width, bomb.height)) {
+							if (!_.contains(data.bodies, body)) {
+								data.bodies.push(body);
+							}
+							if (body.armor >= bomb.power) {
+								if (data.fires[x] && data.fires[x][y]) {
+									data.fires[x][y] = null;
+								}
+								return;
+							} else {
+								self.removeBody(body);
+							}
+							if (body instanceof Bomb) {
+								self.explodeBomb(body, data);
+							}
+						}
+						insertFlame(x, y, firevar);
+					}
+				}
+			}
+		}
+	};
+
+	checkHit( - w, 0, - bomb.width, 0, 'l');
+	checkHit( + bomb.width, 0, + w, 0, 'r');
+	checkHit(0, - h, 0, - bomb.height, 'u');
+	checkHit(0, + bomb.height, 0, + h, 'd');
+
+	return data;
 };
 
 Game.prototype.addBody = function(body, active) {
@@ -718,7 +797,7 @@ Game.prototype.createBlocks = function(size) {
 	for (var y = 1; y < this.world.height / size - 2; y += 2) {
 		for (var x = 1; x < this.world.width / size - 2; x += 2) {
 			var b = new Box(x * size, y * size, size, size);
-			b.armor = 1;
+			b.armor = 2;
 			this.blocks.push(b);
 			this.addBody(b);
 		}

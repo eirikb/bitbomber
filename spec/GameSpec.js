@@ -58,6 +58,7 @@ describe("Game", function() {
 		expect(g.players.length).toBe(4);
 		expect(g.bricks.length).toBe(4);
 		var data = g.explodeBomb(b1);
+        console.log('data', data);
 		expect(data.bodies.length).toBe(14);
 		expect(g.players.length).toBe(1);
 		g.removeBoxes(b1, data);
@@ -65,7 +66,6 @@ describe("Game", function() {
 
         expect(g.getBomb(32, 32)).toBe(null);
 
-		console.log('data', g.explodeBomb(b1));
 	});
 });
 

@@ -21,7 +21,7 @@ Game.prototype.getBomb = function(x, y) {
 			return this.bombs[i];
 		}
 	}
-    return null;
+	return null;
 };
 
 Game.prototype.removeBoxes = function(bomb, data) {
@@ -46,6 +46,15 @@ Game.prototype.explodeBomb = function(bomb, data) {
 	h = bomb.size * bomb.height,
 	self = this;
 	this.removeBody(bomb);
+	var insertFlame = function(x, y, firevar) {
+		if (!data.fires[x]) {
+			data.fires[x] = [];
+		}
+		if (!data.fires[x][y]) {
+			data.fires[x][y] = firevar;
+		}
+	};
+	insertFlame(bomb.x, bomb.y, 'c');
 	var checkHit = function(minX, minY, maxX, maxY, firevar) {
 		for (var x = bomb.x + minX; x <= bomb.x + maxX; x += bomb.width) {
 			for (var y = bomb.y + minY; y <= bomb.y + maxY; y += bomb.height) {
@@ -58,20 +67,16 @@ Game.prototype.explodeBomb = function(bomb, data) {
 								data.bodies.push(body);
 							}
 							if (body.armor >= bomb.power) {
+								data.fires[x][y] = null;
 								return;
 							} else {
 								self.removeBody(body);
-								if (!data.fires[x]) {
-									data.fires[x] = [];
-								}
-								if (!data.fires[x][y]) {
-									data.fires[x][y] = firevar;
-								}
 							}
 							if (body instanceof Bomb) {
 								self.explodeBomb(body, data);
 							}
 						}
+						insertFlame(x, y, firevar);
 					}
 				}
 			}

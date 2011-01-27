@@ -1,9 +1,11 @@
-GamePanel = function(gameHandler) {
+GamePanel = function(gameHandler, socketClient) {
 	var $gamePanel = $('#gamePanel'),
 	$fpsLabel = $('#fpsLabel'),
-	keyboardHandler;
+	keyboardHandler,
+	fires = [],
+	firebricks = [];
 
-	gameHandler.onStartGame(function(game) {
+	gameHandler.addListener('startGame', function(game) {
 		keyboardHandler = new KeyboardHandler();
 
 		$gamePanel.find('*').remove();
@@ -54,7 +56,7 @@ GamePanel = function(gameHandler) {
 		});
 
 		var frame = 0;
-		gameHandler.onStep(function(time) {
+		gameHandler.addListener('step', function(time) {
 			if (++frame === 20) {
 				$fpsLabel.text('Time: ' + time);
 				frame = 0;
@@ -65,7 +67,54 @@ GamePanel = function(gameHandler) {
 			$.each(game.bombs, function(i, b) {
 				animateBomb(b);
 			});
+			$.each(fires, function(i, f) {
+				animateFire(f);
+			});
+			$.each(firebricks, function(i, b) {
+				animateFirebrick(b);
+			});
 		});
+
+		gameHandler.addListener('explodeBomb', function(bomb, data) {
+			bomb.$img.remove();
+			for (var x = 0; x < data.fires.length; x++) {
+				if (data.fires[x]) {
+					for (var y = 0; y < data.fires[x].length; y++) {
+						if (data.fires[x][y]) {
+							var f = data.fires[x][y];
+							if (f === 'l' || f === 'r') {
+								f = 'h';
+							} else if (f === 'u' || f === 'd') {
+								f = 'v';
+							}
+							var $img = $('<img>').attr('src', 'images/f' + f + '1.png').css('left', x).css('top', y).addClass('body');
+							fires.push({
+								f: f,
+								animate: 5,
+								sprite: 1,
+								$img: $img
+							});
+							$gamePanel.append($img);
+						}
+					}
+				}
+			}
+			_.each(data.bodies, function(body) {
+				if (body instanceof Box && body.armor === bomb.power) {
+					body.animate = 0;
+					body.sprite = 0;
+					firebricks.push(body);
+				}
+			});
+		});
+	});
+
+	gameHandler.addListener('addPlayer', function(player) {
+		addPlayer(player);
+	});
+
+	gameHandler.addListener('placeBomb', function(bomb) {
+            placeBomb(bomb);
 	});
 
 	var addBody = function(body, image) {
@@ -120,6 +169,31 @@ GamePanel = function(gameHandler) {
 				b.sprite = 0;
 			}
 			b.$img.attr('src', '/images/bomb' + b.sprites[b.sprite] + '.png');
+		}
+	};
+
+	var animateFire = function(f) {
+		if (--f.animate < 0) {
+			f.animate = 5;
+			if (++f.sprite > 4) {
+				_.without(fires, f);
+				f.$img.remove();
+				return;
+			}
+			f.$img.attr('src', '/images/f' + f.f + f.sprite + '.png');
+		}
+	};
+
+	var animateFirebrick = function(b) {
+		if (--b.animate < 0) {
+			b.animate = 5;
+			if (++b.sprite > 2) {
+				_.without(firebricks, b);
+				gameHandler.removeBody(b);
+				b.$img.remove();
+				return;
+			}
+			b.$img.attr('src', '/images/fb' + b.sprite + '.png');
 		}
 	};
 };

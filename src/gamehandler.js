@@ -1,14 +1,16 @@
 GameHandler = function(lobbyHandler, socketClient) {
 	var game, player, factorialTimer;
-	var onStep = [],
-	onStartGame = [];
+	listeners = {};
 
-	this.onStep = function(callback) {
-		onStep.push(callback);
+	this.addListener = function(trigger, fn) {
+		if (typeof listeners[trigger]  === 'undefined') {
+			listeners[trigger] = [];
+		}
+		listeners[trigger].push(fn);
 	};
 
-	this.onStartGame = function(callback) {
-		onStartGame.push(callback);
+	this.removeBody = function(body) {
+		game.removeBody(body);
 	};
 
 	this.startGame = function(newGame, nick) {
@@ -17,11 +19,11 @@ GameHandler = function(lobbyHandler, socketClient) {
 		factorialTimer = new FactorialTimer();
 		factorialTimer.start(function(time) {
 			game.world.step();
-			_.each(onStep, function(callback) {
+			_.each(listeners['step'], function(callback) {
 				callback(time);
 			});
 		});
-		_.each(onStartGame, function(callback) {
+		_.each(listeners['startGame'], function(callback) {
 			callback(game);
 		});
 	};
@@ -61,21 +63,24 @@ GameHandler = function(lobbyHandler, socketClient) {
 	socketClient.addListener('joinGame', function(result, data) {
 		p = Player.deserialize(data.player);
 		game.addBody(p, true);
-		addPlayer(p);
+
+		_.each(listeners['addPlayer'], function(callback) {
+			callback(p);
+		});
 	});
 
 	socketClient.addListener('startMove', function(result, data) {
 		p = game.getPlayer(data.player);
 		p.direction = new OGE.Direction(data.cos, data.sin);
-		p.x = msg.data.x;
-		p.y = msg.data.y;
+		p.x = data.x;
+		p.y = data.y;
 	});
 
 	socketClient.addListener('endMove', function(result, data) {
 		p = game.getPlayer(data.player);
 		p.direction = null;
-		p.x = msg.data.x;
-		p.y = msg.data.y;
+		p.x = data.x;
+		p.y = data.y;
 	});
 
 	socketClient.addListener('logoutPlayer', function(result, data) {
@@ -86,23 +91,20 @@ GameHandler = function(lobbyHandler, socketClient) {
 
 	socketClient.addListener('placeBomb', function(result, data) {
 		var bomb = new Bomb(data.x, data.y, 16, 16);
-		placeBomb(bomb);
+		game.addBody(bomb);
+		_.each(listeners['placeBomb'], function(callback) {
+			callback(bomb);
+		});
 	});
 
 	socketClient.addListener('explodeBomb', function(result, data) {
 		var bomb = game.getBomb(data.x, data.y);
+        game.getPlayer(data.player).bombs++;
 		if (bomb !== null) {
-			var d = game.explodeBomb(bomb);
-            console.log(d)
-			for (var x = 0; x < d.fires.length; x++) {
-                if (d.fires[x]) {
-				for (var y = 0; y < d.fires[x].length; y++) {
-					console.log(x, y, d.fires[x][y]);
-				}
-                }
-			}
-
-			game.removeBoxes(bomb, d);
+			var data = game.explodeBomb(bomb);
+			_.each(listeners['explodeBomb'], function(callback) {
+				callback(bomb, data);
+			});
 		}
 	});
 };

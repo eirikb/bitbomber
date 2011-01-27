@@ -11,6 +11,7 @@ HttpClient = function() {
 	this.playNow = function(fn) {
 		$.getJSON('/lobby?cmd=joinGame&guid=' + user.guid, function(data) {
 			utils.log('playNow', data);
+            fn(data);
 		});
 	};
 

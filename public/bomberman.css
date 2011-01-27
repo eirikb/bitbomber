@@ -129,3 +129,9 @@ button:active {
     -webkit-box-shadow: inset 0px 0px 0px 1px rgba(255, 115, 100, 0.4);
     box-shadow: inset 0px 0px 0px 1px rgba(255, 115, 100, 0.4);
 }
+.player { 
+    z-index: 2;
+}
+.bomb {
+    z-index: 1;
+}

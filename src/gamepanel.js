@@ -3,7 +3,7 @@ GamePanel = function(gameHandler) {
 	$fpsLabel = $('#fpsLabel'),
 	keyboardHandler;
 
-	this.startGame = function(game) {
+	gameHandler.onStartGame(function(game) {
 		keyboardHandler = new KeyboardHandler();
 
 		$gamePanel.find('*').remove();
@@ -29,7 +29,9 @@ GamePanel = function(gameHandler) {
 			switch (dir) {
 			case 'space':
 				var bomb = gameHandler.placeBomb();
-				placeBomb(bomb);
+				if ( !! bomb) {
+					placeBomb(bomb);
+				}
 				break;
 			case 'left':
 				cos = - 1;
@@ -52,7 +54,7 @@ GamePanel = function(gameHandler) {
 		});
 
 		var frame = 0;
-		gameHandler.onStep(function(tim) {
+		gameHandler.onStep(function(time) {
 			if (++frame === 20) {
 				$fpsLabel.text('Time: ' + time);
 				frame = 0;
@@ -64,16 +66,17 @@ GamePanel = function(gameHandler) {
 				animateBomb(b);
 			});
 		});
-	};
+	});
 
 	var addBody = function(body, image) {
 		var $img = $('<img>').attr('src', 'images/' + image + '.png').css('left', body.x).css('top', body.y).addClass('body');
 		$gamePanel.append($img);
 		body.$img = $img;
+		return $img;
 	};
 
 	var addPlayer = function(player) {
-		addBody(player, 'pl1');
+		addBody(player, 'pl1').addClass('player');
 		player.animate = 0;
 		player.sprite = 0;
 		player.sprites = [1, 2, 1, 3];

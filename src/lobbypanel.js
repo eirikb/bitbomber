@@ -9,6 +9,7 @@ LobbyPanel = function(lobbyHandler) {
 	var init = function() {
 		$nickField.keypress(function(e) {
 			if (e.keyCode === 13) {
+				$nickField.blur();
 				login();
 			}
 		});
@@ -52,6 +53,7 @@ LobbyPanel = function(lobbyHandler) {
 				if (result) {
 					showLobby();
 				} else {
+					$nickField.focus();
 					$loginPanel.children('span').text('Nick taken!');
 				}
 			});

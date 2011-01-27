@@ -51,7 +51,7 @@ function Bomberman(port) {
 					break;
 				case 'joinGame':
 					if (c.isSet(p)) {
-						res = games.joinGame(p, params.name);
+						res = games.joinGame(params.cmd, p, params.name);
 					} else {
 						res = c.error(0, 'UNKNOWN PLAYER'); 
 					}

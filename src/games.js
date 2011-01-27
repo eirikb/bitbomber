@@ -1,7 +1,8 @@
 var players = require('players'),
 c = require('commons'),
 _ = require('../lib/underscore/underscore'),
-b = require('bomberman');
+b = require('bomberman'),
+ingame = require('ingame');
 
 exports.playerLogout = function(cmd, player) {
 	var g = b.playerGames[player.nick];
@@ -34,7 +35,7 @@ exports.createGame = function(player) {
 	}
 };
 
-exports.joinGame = function(player) {
+exports.joinGame = function(cmd, player) {
 	var games = _.keys(b.openGames);
 	if (games.length > 0) {
 		var i = Math.floor(Math.random() * games.length);
@@ -54,9 +55,9 @@ exports.joinGame = function(player) {
 		player.x = x;
 		player.y = y;
 		if (g.addBody(player, true)) {
-			b.playerGames[player.nick]  = g;
+			b.playerGames[player.nick] = g;
 			c.log('Player ' + player.nick + ' join game ' + g.guid);
-			ingame.joinGame(player, game);
+			ingame.joinGame(cmd, player, g);
 			return c.success(g.serialize());
 		} else {
 			c.log('Player ' + player.nick + ' unable to join game ' + g.guid);

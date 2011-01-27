@@ -1,7 +1,7 @@
-var c = require('commons');
+var c = require('commons'),
+b = require('bomberman');
 
 var bombs = [];
-var bombGames = {};
 
 exports.startBombTimer = function() {
 	function checkBombs() {
@@ -9,13 +9,15 @@ exports.startBombTimer = function() {
 			var bomb = bombs[i];
 			console.log(bomb.x + ' - ' + bomb.y + ' - ' + bomb.timer);
 			if (--bomb.timer === 0) {
-				sendAll(bombGames[bomb], c.success('explodeBomb', {
+				var data = {
+					player: bomb.player.nick,
 					x: bomb.x,
 					y: bomb.y
-				}));
+				};
+
+				sendAll(bomb.game, c.success('explodeBomb', data));
+				bomb.game.removeBody(bomb);
 				bombs.splice(i, 1);
-				delete bombGames[bomb];
-				game.removeBody(bomb);
 			}
 		}
 	};
@@ -80,7 +82,8 @@ exports.placeBomb = function(cmd, player, game, data) {
 	var bomb = new Bomb(x, y, 16, 16);
 	game.addBody(bomb);
 	bombs.push(bomb);
-	bombGames[bomb]  = game;
+	bomb.game = game;
+	bomb.player = player;
 	sendAll(game, c.success(cmd, {
 		x: x,
 		y: y,

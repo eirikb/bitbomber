@@ -774,52 +774,37 @@ Game.deserialize = function(data) {
 var $infoArea;
 var utils = {};
 utils.log = function(cmd, msg) {
-    if (arguments.length === 1) {
-        msg = cmd;
-    }
-    msg.cmd = msg.cmd || cmd;
-	if (msg.cmd && msg.result) {
-		if (typeof console !== 'undefined' && console !== null) {
-			console.log(msg.cmd, msg);
-		}
-		msg = msg.cmd + ' - ' + msg.result;
-	} else {
-		if (typeof console !== 'undefined' && console !== null) {
-			console.log(msg);
-		}
+	if (arguments.length === 1) {
+		msg = cmd;
+		cmd = msg.cmd;
 	}
+	if (typeof console !== 'undefined' && console !== null) {
+		console.log(cmd, msg);
+	}
+	msg = cmd + ' - ' + msg.result;
 	$infoArea.val($infoArea.val() + ($infoArea.val().length > 0 ? '\n': '') + msg);
 	$infoArea.attr('scrollTop', $infoArea.attr('scrollHeight'));
 };
 
-var bomberman = function() {
-	var lobbyHandler = new LobbyHandler(this),
-	gameHandler = new GameHandler(this);
-
-	this.startGame = function(game, nick) {
-		gameHandler.startGame(game, nick);
-	};
-
-	this.login = function(guid) {
-		gameHandler.login(guid);
-	};
-};
-
 $(function() {
 	$infoArea = $('#infoArea');
-	bomberman();
+	var httpClient = new HttpClient(),
+	socketClient = new SocketClient(),
+	gameHandler = new GameHandler(lobbyHandler, socketClient),
+	lobbyHandler = new LobbyHandler(gameHandler, httpClient, socketClient),
+	gamePanel = new GamePanel(gameHandler),
+	lobbyPanel = new LobbyPanel(lobbyHandler);
 });
 
-LobbyHandler = function(bomberman) {
-	var lobbyClient = new LobbyClient(this),
-	lobbyPanel = new LobbyPanel(this),
+LobbyHandler = function(gameHandler, httpClient, socketClient) {
+	var httpClient = new HttpClient(this),
 	user;
 
 	this.createGame = function(fn) {
-		lobbyClient.createGame(function(data) {
+		httpClient.createGame(function(data) {
 			if (data.result === 'OK') {
 				var game = Game.deserialize(data.data);
-				bomberman.startGame(game, user.nick);
+				gameHandler.startGame(game, user.nick);
 				fn(true);
 			} else {
 				fn(fale);
@@ -828,10 +813,10 @@ LobbyHandler = function(bomberman) {
 	};
 
 	this.playNow = function(fn) {
-		lobbyClient.playNow(function(data) {
+		httpClient.playNow(function(data) {
 			if (data.result === 'OK') {
 				var game = Game.deserialize(data.data);
-				bomberman.startGame(game, user.nick);
+				gameHandler.startGame(game, user.nick);
 				fn(true);
 			} else {
 				fn(false);
@@ -841,10 +826,12 @@ LobbyHandler = function(bomberman) {
 	};
 
 	this.login = function(nick, fn) {
-		lobbyClient.login(nick, function(data) {
+		httpClient.login(nick, function(data) {
 			if (data.result === 'OK') {
 				user = data.data;
-				bomberman.login(user.guid);
+				socketClient.send('authPlayer', {
+					guid: user.guid
+				});
 				fn(true);
 			} else {
 				fn(false);
@@ -853,7 +840,7 @@ LobbyHandler = function(bomberman) {
 	};
 };
 
-LobbyClient = function() {
+HttpClient = function() {
 	var user;
 
 	this.createGame = function(fn) {
@@ -866,6 +853,7 @@ LobbyClient = function() {
 	this.playNow = function(fn) {
 		$.getJSON('/lobby?cmd=joinGame&guid=' + user.guid, function(data) {
 			utils.log('playNow', data);
+            fn(data);
 		});
 	};
 
@@ -891,6 +879,7 @@ LobbyPanel = function(lobbyHandler) {
 	var init = function() {
 		$nickField.keypress(function(e) {
 			if (e.keyCode === 13) {
+				$nickField.blur();
 				login();
 			}
 		});
@@ -934,6 +923,7 @@ LobbyPanel = function(lobbyHandler) {
 				if (result) {
 					showLobby();
 				} else {
+					$nickField.focus();
 					$loginPanel.children('span').text('Nick taken!');
 				}
 			});
@@ -943,93 +933,152 @@ LobbyPanel = function(lobbyHandler) {
 	init();
 };
 
-GameHandler = function(bomberman) {
-	var gamePanel = new GamePanel(this),
-	gameClient = new GameClient(),
-	game,
-	player;
+GameHandler = function(lobbyHandler, socketClient) {
+	var game, player, factorialTimer;
+	listeners = {};
+
+	this.addListener = function(trigger, fn) {
+		if (typeof listeners[trigger]  === 'undefined') {
+			listeners[trigger] = [];
+		}
+		listeners[trigger].push(fn);
+	};
+
+	this.removeBody = function(body) {
+		game.removeBody(body);
+	};
 
 	this.startGame = function(newGame, nick) {
 		game = newGame;
 		player = game.getPlayer(nick);
-		gamePanel.startGame(game);
-	};
-
-	this.login = function(guid) {
-		gameClient.send('authPlayer', {
-			guid: guid
+		factorialTimer = new FactorialTimer();
+		factorialTimer.start(function(time) {
+			game.world.step();
+			_.each(listeners['step'], function(callback) {
+				callback(time);
+			});
 		});
-	};
-
-	this.step = function() {
-		game.world.step();
+		_.each(listeners['startGame'], function(callback) {
+			callback(game);
+		});
 	};
 
 	this.startMove = function(cos, sin) {
-		player.direction = new OGE.Direction(cos, sin);
-		gameClient.send('startMove', {
-			cos: cos,
-			sin: sin,
-			x: player.x,
-			y: player.y
-		});
-	};
-
-	this.endMove = function() {
-		player.direction = null;
-		gameClient.send('endMove', {
-			x: player.x,
-			y: player.y
-		});
-	};
-
-	this.placeBomb = function() {
-		if (player.bombs > 0) {
-			player.bombs--;
-			var bomb = new Bomb(Math.floor((player.x + 8) / 16) * 16, Math.floor((player.y + 8) / 16) * 16, 16, 16);
-			bomb.power = player.power;
-			gameClient.send('placeBomb', {
-				x: bomb.x,
-				y: bomb.y
+		if (!player.dead) {
+			player.direction = new OGE.Direction(cos, sin);
+			socketClient.send('startMove', {
+				cos: cos,
+				sin: sin,
+				x: player.x,
+				y: player.y
 			});
-			return bomb;
 		}
 	};
 
-	gameClient.addListener('joinGame', function(data) {
-		p = Player.deserialize(msg.data.player);
+	this.endMove = function() {
+		if (!player.dead) {
+			player.direction = null;
+			socketClient.send('endMove', {
+				x: player.x,
+				y: player.y
+			});
+		}
+	};
+
+	this.placeBomb = function() {
+		if (!player.dead) {
+			if (player.bombs > 0) {
+				player.bombs--;
+				var bomb = new Bomb(Math.floor((player.x + 8) / 16) * 16, Math.floor((player.y + 8) / 16) * 16, 16, 16);
+				game.addBody(bomb);
+				bomb.power = player.power;
+				socketClient.send('placeBomb', {
+					x: bomb.x,
+					y: bomb.y
+				});
+				return bomb;
+			}
+		}
+	};
+
+	socketClient.addListener('joinGame', function(result, data) {
+		p = Player.deserialize(data.player);
 		game.addBody(p, true);
-		addPlayer(p);
+
+		_.each(listeners['addPlayer'], function(callback) {
+			callback(p);
+		});
 	});
 
-	gameClient.addListener('startMove', function(data) {
-		p = game.getPlayer(msg.data.player);
-		p.direction = new OGE.Direction(msg.data.cos, msg.data.sin);
-		p.x = msg.data.x;
-		p.y = msg.data.y;
+	socketClient.addListener('startMove', function(result, data) {
+		p = game.getPlayer(data.player);
+		p.direction = new OGE.Direction(data.cos, data.sin);
+		p.x = data.x;
+		p.y = data.y;
 	});
 
-	gameClient.addListener('endMove', function(data) {
-		p = game.getPlayer(msg.data.player);
+	socketClient.addListener('endMove', function(result, data) {
+		p = game.getPlayer(data.player);
 		p.direction = null;
-		p.x = msg.data.x;
-		p.y = msg.data.y;
+		p.x = data.x;
+		p.y = data.y;
 	});
 
-	gameClient.addListener('logoutPlayer', function(data) {
-		p = game.getPlayer(msg.data.player);
+	socketClient.addListener('logoutPlayer', function(result, data) {
+		p = game.getPlayer(data.player);
 		p.$img.remove();
 		game.removeBody(p);
 	});
 
-	gameClient.addListener('placeBomb', function(data) {
-		var bomb = new Bomb(msg.data.x, msg.data.y, 16, 16);
-		placeBomb(bomb);
+	socketClient.addListener('placeBomb', function(result, data) {
+		var bomb = new Bomb(data.x, data.y, 16, 16);
+		game.addBody(bomb);
+		_.each(listeners['placeBomb'], function(callback) {
+			callback(bomb);
+		});
 	});
 
+	socketClient.addListener('explodeBomb', function(result, data) {
+		var bomb = game.getBomb(data.x, data.y);
+		game.getPlayer(data.player).bombs++;
+		if (bomb !== null) {
+			var data = game.explodeBomb(bomb);
+			if (_.include(data.bodies, player)) {
+				//player.dead = true;
+				//game.removeBody(player);
+				_.each(listeners['meDead'], function(callback) {
+				//	callback(player);
+				});
+                player.x = 0;
+                player.y = 0;
+				socketClient.send('playerDead', {});
+			}
+			_.each(listeners['explodeBomb'], function(callback) {
+				callback(bomb, data);
+			});
+		}
+	});
+
+	socketClient.addListener('playerDead', function(result, data) {
+		var p = game.getPlayer(data.player);
+		//game.removeBody(p);
+        p.x = 0;
+        p.y = 0;
+		_.each(listeners['playerDead'], function(callback) {
+			//callback(p);
+		});
+	});
+
+	socketClient.addListener('resurectPlayer', function(result, data) {
+		var p = game.getPlayer(data.player);
+		game.addBody(p);
+		_.each(listeners['resurectPlayer'], function(callback) {
+			callback(p);
+		});
+	});
 };
 
-GameClient = function() {
+SocketClient = function() {
 	var client = new io.Socket(),
 	listeners = {};
 
@@ -1060,11 +1109,11 @@ GamePanel = function(gameHandler) {
 	var $gamePanel = $('#gamePanel'),
 	$fpsLabel = $('#fpsLabel'),
 	keyboardHandler,
-	factorialTimer;
+	fires = [],
+	firebricks = [];
 
-	this.startGame = function(game) {
+	gameHandler.addListener('startGame', function(game) {
 		keyboardHandler = new KeyboardHandler();
-		factorialTimer = new FactorialTimer();
 
 		$gamePanel.find('*').remove();
 		$gamePanel.show();
@@ -1089,7 +1138,9 @@ GamePanel = function(gameHandler) {
 			switch (dir) {
 			case 'space':
 				var bomb = gameHandler.placeBomb();
-				placeBomb(bomb);
+				if ( !! bomb) {
+					placeBomb(bomb);
+				}
 				break;
 			case 'left':
 				cos = - 1;
@@ -1112,8 +1163,7 @@ GamePanel = function(gameHandler) {
 		});
 
 		var frame = 0;
-		factorialTimer.start(function(time) {
-			gameHandler.step();
+		gameHandler.addListener('step', function(time) {
 			if (++frame === 20) {
 				$fpsLabel.text('Time: ' + time);
 				frame = 0;
@@ -1124,17 +1174,77 @@ GamePanel = function(gameHandler) {
 			$.each(game.bombs, function(i, b) {
 				animateBomb(b);
 			});
+			$.each(fires, function(i, f) {
+				animateFire(f);
+			});
+			$.each(firebricks, function(i, b) {
+				animateFirebrick(b);
+			});
 		});
-	};
+
+		gameHandler.addListener('explodeBomb', function(bomb, data) {
+			bomb.$img.remove();
+			for (var x = 0; x < data.fires.length; x++) {
+				if (data.fires[x]) {
+					for (var y = 0; y < data.fires[x].length; y++) {
+						if (data.fires[x][y]) {
+							var f = data.fires[x][y];
+							if (f === 'l' || f === 'r') {
+								f = 'h';
+							} else if (f === 'u' || f === 'd') {
+								f = 'v';
+							}
+							var $img = $('<img>').attr('src', 'images/f' + f + '1.png').css('left', x).css('top', y).addClass('body');
+							fires.push({
+								f: f,
+								animate: 5,
+								sprite: 1,
+								$img: $img
+							});
+							$gamePanel.append($img);
+						}
+					}
+				}
+			}
+			_.each(data.bodies, function(body) {
+				if (body instanceof Box && body.armor === bomb.power) {
+					body.animate = 0;
+					body.sprite = 0;
+					firebricks.push(body);
+				}
+			});
+		});
+	});
+
+	gameHandler.addListener('addPlayer', function(player) {
+		addPlayer(player);
+	});
+
+	gameHandler.addListener('placeBomb', function(bomb) {
+		placeBomb(bomb);
+	});
+
+	gameHandler.addListener('meDead', function(player) {
+		player.$img.remove();
+	});
+
+	gameHandler.addListener('playerDead', function(player) {
+		player.$img.remove();
+	});
+
+	gameHandler.addListener('resurectPlayer', function(player) {
+		$gamePanel.append(player.$img);
+	});
 
 	var addBody = function(body, image) {
 		var $img = $('<img>').attr('src', 'images/' + image + '.png').css('left', body.x).css('top', body.y).addClass('body');
 		$gamePanel.append($img);
 		body.$img = $img;
+		return $img;
 	};
 
 	var addPlayer = function(player) {
-		addBody(player, 'pl1');
+		addBody(player, 'pl1').addClass('player');
 		player.animate = 0;
 		player.sprite = 0;
 		player.sprites = [1, 2, 1, 3];
@@ -1178,6 +1288,31 @@ GamePanel = function(gameHandler) {
 				b.sprite = 0;
 			}
 			b.$img.attr('src', '/images/bomb' + b.sprites[b.sprite] + '.png');
+		}
+	};
+
+	var animateFire = function(f) {
+		if (--f.animate < 0) {
+			f.animate = 5;
+			if (++f.sprite > 4) {
+				_.without(fires, f);
+				f.$img.remove();
+				return;
+			}
+			f.$img.attr('src', '/images/f' + f.f + f.sprite + '.png');
+		}
+	};
+
+	var animateFirebrick = function(b) {
+		if (--b.animate < 0) {
+			b.animate = 5;
+			if (++b.sprite > 2) {
+				_.without(firebricks, b);
+				gameHandler.removeBody(b);
+				b.$img.remove();
+				return;
+			}
+			b.$img.attr('src', '/images/fb' + b.sprite + '.png');
 		}
 	};
 };

@@ -1,7 +1,10 @@
 LIB_DIR = lib
 BOMBERMAN_CLIENT_DIR = ${LIB_DIR}/bomberman-client
 
-all: hack
+all: update hack
+
+update:
+	git submodule update --init
 
 hack:
 	cd public; \

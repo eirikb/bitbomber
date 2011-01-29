@@ -36,7 +36,7 @@ KeyboardHandler = function() {
 		}
 		if (dir !== null) {
 			if (keyCode !== e.keyCode) {
-				keyCode = e.keyCode;
+				keyCode = dir !== 'space' ? e.keyCode : keyCode;
 				keydown(dir);
 			}
 			e.stopPropagation();

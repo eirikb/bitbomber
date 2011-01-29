@@ -6,10 +6,11 @@ FactorialTimer = function() {
 
 	this.start = function(callbackFn) {
 		callback = callbackFn;
-		step();
+		setInterval(step, 50);
 	};
 
 	var step = function() {
+		/*
 		time = Math.floor((new Date().getTime() - time) * 0.9 + lastTime * 0.1);
 		lastTime = time;
 		if (time > 50 && sleepTime > 45) {
@@ -17,11 +18,10 @@ FactorialTimer = function() {
 		} else if (time < 50 && sleepTime < 55) {
 			sleepTime++;
 		}
-		callback(time);
-
 		time = new Date().getTime();
+        */
+		callback();
 
-		setTimeout(step, sleepTime);
 	};
 };
 

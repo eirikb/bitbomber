@@ -17,11 +17,18 @@ GameHandler = function(lobbyHandler, socketClient) {
 		game = newGame;
 		player = game.getPlayer(nick);
 		factorialTimer = new FactorialTimer();
-		factorialTimer.start(function(time) {
+        var time = new Date().getTime(), fps, gameTime;
+        var frames = 0;
+		factorialTimer.start(function() {
+            time = new Date().getTime() - time;
+            gameTime = new Date().getTime();
 			game.world.step();
+            gameTime = new Date().getTime() - gameTime;
+            var fps = Math.floor(1000 / time);
 			_.each(listeners['step'], function(callback) {
-				callback(time);
+				callback(time, fps, gameTime);
 			});
+            time = new Date().getTime();
 		});
 		_.each(listeners['startGame'], function(callback) {
 			callback(game);
@@ -53,8 +60,9 @@ GameHandler = function(lobbyHandler, socketClient) {
 	this.placeBomb = function() {
 		if (!player.dead) {
 			if (player.bombs > 0) {
-				player.bombs--;
+				//player.bombs--;
 				var bomb = new Bomb(Math.floor((player.x + 8) / 16) * 16, Math.floor((player.y + 8) / 16) * 16, 16, 16);
+                bomb.size = 2;
 				game.addBody(bomb);
 				bomb.power = player.power;
 				socketClient.send('placeBomb', {

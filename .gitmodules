@@ -1,0 +1,3 @@
+[submodule "lib/bomberman-game"]
+	path = lib/bomberman-game
+	url = https://github.com/eirikb/bomberman-game.git

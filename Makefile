@@ -1,7 +1,6 @@
 LIB_DIR = lib
 SRC_DIR = src
 DIST_DIR = dist
-JASMINE_DIR = ${LIB_DIR}/jasmine
 OGE_DIR = ${LIB_DIR}/oge
 UNDERSCORE_DIR = ${LIB_DIR}/underscore
 
@@ -21,13 +20,11 @@ MIN_ALL_VERSION = ${DIST_DIR}/bomberman.all.min.js
 
 all: update lint build
 
+update: 
+	git submodule update --init
+
 lint: 
 	java -jar ${JSLINT4JAVA} ${BASE_FILES}
-
-update: 
-	$(call clone_or_pull, ${JASMINE_DIR}, https://github.com/pivotal/jasmine.git)
-	$(call clone_or_pull, ${OGE_DIR}, https://github.com/eirikb/oge.git)
-	$(call clone_or_pull, ${UNDERSCORE_DIR}, https://github.com/documentcloud/underscore.git)
 
 build: 
 	cat ${UNDERSCORE_DIR}/underscore.js > ${BUNDLE_ALL_VERSION}
@@ -37,16 +34,5 @@ build:
 	cat ${BASE_FILES} >> ${BUNDLE_VERSION}
 	java -jar ${CLOSURE_COMPILER} --js ${BUNDLE_VERSION} --js_output_file ${MIN_VERSION}
 	java -jar ${CLOSURE_COMPILER} --js ${BUNDLE_ALL_VERSION} --js_output_file ${MIN_ALL_VERSION}
-
-define clone_or_pull
--@@if test ! -d $(strip ${1})/.git; then \
-	echo "Cloning $(strip ${1})..."; \
-	git clone $(strip ${verbose}) --depth=1 $(strip ${2}) $(strip ${1}); \
-	else \
-	echo "Pulling $(strip ${1})..."; \
-	git --git-dir=$(strip ${1})/.git pull $(strip ${verbose}) origin master; \
-	fi
-
-endef
 
 .PHONY: all update lint

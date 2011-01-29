@@ -1,0 +1,15 @@
+[submodule "lib/node-static"]
+	path = lib/node-static
+	url = https://github.com/cloudhead/node-static.git
+[submodule "lib/socket.io"]
+	path = lib/socket.io
+	url = https://github.com/LearnBoost/Socket.IO-node.git
+[submodule "lib/bomberman-client"]
+	path = lib/bomberman-client
+	url = https://github.com/eirikb/bomberman-client.git
+[submodule "lib/bomberman-game"]
+	path = lib/bomberman-game
+	url = https://github.com/eirikb/bomberman-game.git
+[submodule "lib/underscore"]
+	path = lib/underscore
+	url = https://github.com/documentcloud/underscore.git

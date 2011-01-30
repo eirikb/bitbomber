@@ -72,10 +72,10 @@ GamePanel = function(gameHandler) {
 			});
 			$.each(fires, function(i, f) {
 				animateBody(f);
-                if (f.sprite === f.sprites.length - 1 && f.animate === 1) {
-                    fires = _.without(fires, f);
-                    f.$img.remove();
-                }
+				if (f.sprite === f.sprites.length - 1 && f.animate === 1) {
+					fires = _.without(fires, f);
+					f.$img.remove();
+				}
 			});
 			$.each(firebricks, function(i, b) {
 				animateBody(b);
@@ -89,40 +89,45 @@ GamePanel = function(gameHandler) {
 
 		gameHandler.addListener('explodeBomb', function(bomb, data) {
 			bomb.$img.remove();
-			for (var x = 0; x < data.fires.length; x++) {
-				if (data.fires[x]) {
-					for (var y = 0; y < data.fires[x].length; y++) {
-						if (data.fires[x][y]) {
-							var f = data.fires[x][y];
-							var os = 0;
-							if (f === 'l' || f === 'r') {
-                                os = 5;
-							} else if (f === 'u' || f === 'd') {
-                                os = 6;
-							}
-							var fire = {
-								x: x,
-								y: y,
-                                direction: null,
-								sprites: [0, 1, 2, 3]
-							};
-							addBody(fire, 'fires');
-                            fire.animate = 5;
-                            fire.offsetSprite = os;
-                            fire.maxAnimate = 1;
-                            fires.push(fire);
-						}
-					}
+			_.each(data.fires, function(fire) {
+				var os = 0,
+				f = fire.firevar;
+				switch (f) {
+				case 'l':
+					os = 2;
+					break;
+				case 'r':
+					os = 3;
+					break;
+				case 'u':
+					os = 4;
+					break;
+				case 'd':
+					os = 1;
+					break;
+				case 'h':
+					os = 5;
+					break;
+				case 'v':
+					os = 6;
+					break;
 				}
-			}
+				fire.direction = null,
+				fire.sprites = [0, 1, 2, 3];
+				addBody(fire, 'fires');
+				fire.animate = 5;
+				fire.offsetSprite = os;
+				fire.maxAnimate = 1;
+				fires.push(fire);
+			});
 			_.each(data.bodies, function(body) {
 				if (body instanceof Box && body.armor === bomb.power) {
 					body.animate = 0;
 					body.sprite = 0;
 					firebricks.push(body);
 				} else if (body instanceof Bomb) {
-                    body.$img.remove();
-                }
+					body.$img.remove();
+				}
 			});
 		});
 	});
@@ -154,7 +159,7 @@ GamePanel = function(gameHandler) {
 		body.sprite = 0;
 		body.offsetSprite = 0;
 		body.animate = 0;
-        body.animateCount = 0;
+		body.animateCount = 0;
 		return $img;
 	};
 

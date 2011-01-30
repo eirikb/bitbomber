@@ -2,7 +2,6 @@ var DummyClient = function() {
 	var listeners = {};
 
 	this.addListener = function(trigger, fn) {
-		log(trigger);
 		if (typeof listeners[trigger]  === 'undefined') {
 			listeners[trigger] = [];
 		}

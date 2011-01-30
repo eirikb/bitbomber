@@ -1320,7 +1320,7 @@ OGE.World.prototype.slideBody = function(body, direction) {
  * THE SOFTWARE.
  *
  * @author Eirik Brandtzæg <eirikb@eirikb.no>
- * @Version 0.4
+ * @Version 0.5
  */
 
 // Prevent protoype inheritance from calling constructors twice when using apply
@@ -1452,10 +1452,10 @@ Game.prototype.getBomb = function(x, y) {
 	return null;
 };
 
-Game.prototype.removeBoxes = function(bomb, data) {
+Game.prototype.removeBodies = function(bodies, type) {
 	var self = this;
-	_.each(data.bodies, function(body) {
-		if (body instanceof Box && body.armor === bomb.power) {
+	_.each(bodies, function(body) {
+		if (body instanceof type) {
 			self.removeBody(body);
 		}
 	});
@@ -1472,51 +1472,79 @@ Game.prototype.explodeBomb = function(bomb, data) {
 	}
 	var w = bomb.size * bomb.width,
 	h = bomb.size * bomb.height,
-	self = this;
-	this.removeBody(bomb);
-	var insertFlame = function(x, y, firevar) {
-		if (!data.fires[x]) {
-			data.fires[x] = [];
-		}
-		if (!data.fires[x][y]) {
-			data.fires[x][y] = firevar;
+	self = this,
+	insertFire = function(x, y, firevar) {
+		var d = function(e) {
+			return e.x === x && e.y === y;
+		};
+		if (typeof _.detect(data.bodies, d) === 'undefined') {
+			var fire = {
+				x: x,
+				y: y,
+				firevar: firevar
+			};
+			var oldFire = _.detect(data.fires, d);
+			if (typeof oldFire !== 'undefined') {
+				if (oldFire.firevar !== 'c' && _.contains('c', 'v', 'h', fire.firevar)) {
+					data.fires = _.without(data.fires, oldFire);
+					data.fires.push(fire);
+				}
+			} else {
+				data.fires.push(fire);
+			}
 		}
 	};
-	insertFlame(bomb.x, bomb.y, 'c');
-	var checkHit = function(minX, minY, maxX, maxY, firevar) {
-		for (var x = bomb.x + minX; x <= bomb.x + maxX; x += bomb.width) {
-			for (var y = bomb.y + minY; y <= bomb.y + maxY; y += bomb.height) {
-				if (x >= 0 && y >= 0 && x < self.world.width && y < self.world.height) {
-					var b = self.world.getBodies(x, y, bomb.width, bomb.height);
-					for (var i = 0; i < b.length; i++) {
-						var body = b[i];
-						if (body !== bomb && body.intersects(x, y, bomb.width, bomb.height)) {
-							if (!_.contains(data.bodies, body)) {
+	this.removeBody(bomb);
+	insertFire(bomb.x, bomb.y, 'c');
+	var checkHit = function(xDir, yDir, firevar1, firevar2) {
+		var xDiff = xDir * bomb.width,
+		sx = bomb.x + xDiff,
+		ex = bomb.x + bomb.size * xDiff,
+		yDiff = yDir * bomb.height,
+		sy = bomb.y + yDiff,
+		ey = bomb.y + bomb.size * yDiff;
+		actualCheck = function(x, y, firevar) {
+			if (x >= 0 && y >= 0 && x < self.world.width && y < self.world.height) {
+				var b = self.world.getBodies(x, y, bomb.width, bomb.height);
+				for (var i = 0; i < b.length; i++) {
+					var body = b[i];
+					if (body !== bomb && body.intersects(x + 2, y + 2, bomb.width - 2, bomb.height - 2)) {
+						if (body.armor > bomb.power) {
+							return false;
+						} else {
+							if (! (body instanceof Bomb) && ! _.contains(data.bodies, body)) {
 								data.bodies.push(body);
 							}
-							if (body.armor >= bomb.power) {
-								if (data.fires[x] && data.fires[x][y]) {
-									data.fires[x][y] = null;
-								}
-								return;
-							} else {
-								self.removeBody(body);
-							}
-							if (body instanceof Bomb) {
-								self.explodeBomb(body, data);
+							if (body.armor === bomb.power) {
+								return false;
 							}
 						}
-						insertFlame(x, y, firevar);
+						if (body instanceof Bomb) {
+							self.explodeBomb(body, data);
+						}
 					}
 				}
+				insertFire(x, y, firevar);
+			}
+			return true;
+		};
+
+		for (var x = sx; x !== ex + xDiff; x += xDiff) {
+			if (!actualCheck(x, bomb.y, x !== ex ? firevar1: firevar2)) {
+				break;
+			}
+		}
+		for (var y = sy; y !== ey + yDiff; y += yDiff) {
+			if (!actualCheck(bomb.x, y, y !== ey ? firevar1: firevar2)) {
+				break;
 			}
 		}
 	};
 
-	checkHit( - w, 0, - bomb.width, 0, 'l');
-	checkHit( + bomb.width, 0, + w, 0, 'r');
-	checkHit(0, - h, 0, - bomb.height, 'u');
-	checkHit(0, + bomb.height, 0, + h, 'd');
+	checkHit( - 1, 0, 'h', 'l');
+	checkHit(1, 0, 'h', 'r');
+	checkHit(0, - 1, 'v', 'u');
+	checkHit(0, 1, 'v', 'd');
 
 	return data;
 };

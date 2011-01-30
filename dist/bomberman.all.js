@@ -284,7 +284,7 @@
   // values in the array. Aliased as `head`. The **guard** check allows it to work
   // with `_.map`.
   _.first = _.head = function(array, n, guard) {
-    return n && !guard ? slice.call(array, 0, n) : array[0];
+    return (n != null) && !guard ? slice.call(array, 0, n) : array[0];
   };
 
   // Returns everything but the first entry of the array. Aliased as `tail`.
@@ -292,7 +292,7 @@
   // the rest of the values in the array from that index onward. The **guard**
   // check allows it to work with `_.map`.
   _.rest = _.tail = function(array, index, guard) {
-    return slice.call(array, _.isUndefined(index) || guard ? 1 : index);
+    return slice.call(array, (index == null) || guard ? 1 : index);
   };
 
   // Get the last element of an array.
@@ -1803,11 +1803,18 @@ GameHandler = function(lobbyHandler, socketClient) {
 		game = newGame;
 		player = game.getPlayer(nick);
 		factorialTimer = new FactorialTimer();
-		factorialTimer.start(function(time) {
+        var time = new Date().getTime(), fps, gameTime;
+        var frames = 0;
+		factorialTimer.start(function() {
+            time = new Date().getTime() - time;
+            gameTime = new Date().getTime();
 			game.world.step();
+            gameTime = new Date().getTime() - gameTime;
+            var fps = Math.floor(1000 / time);
 			_.each(listeners['step'], function(callback) {
-				callback(time);
+				callback(time, fps, gameTime);
 			});
+            time = new Date().getTime();
 		});
 		_.each(listeners['startGame'], function(callback) {
 			callback(game);
@@ -1839,8 +1846,9 @@ GameHandler = function(lobbyHandler, socketClient) {
 	this.placeBomb = function() {
 		if (!player.dead) {
 			if (player.bombs > 0) {
-				player.bombs--;
+				//player.bombs--;
 				var bomb = new Bomb(Math.floor((player.x + 8) / 16) * 16, Math.floor((player.y + 8) / 16) * 16, 16, 16);
+                bomb.size = 2;
 				game.addBody(bomb);
 				bomb.power = player.power;
 				socketClient.send('placeBomb', {
@@ -2014,23 +2022,35 @@ GamePanel = function(gameHandler) {
 		});
 
 		var frame = 0;
-		gameHandler.addListener('step', function(time) {
-			if (++frame === 20) {
-				$fpsLabel.text('Time: ' + time);
-				frame = 0;
-			}
+		gameHandler.addListener('step', function(time, fps, gameTime) {
+			var visualTime = new Date().getTime();
 			$.each(game.players, function(i, p) {
-				animatePlayer(p);
+				if (p.animate === 0 && p.direction !== null && p.speed > 0) {
+					p.animate = 5;
+					p.sprite = 0;
+				} else if (p.animate > 0 && p.direction === null || p.speed === 0) {
+					p.animate = 0;
+				}
+				animateBody(p);
 			});
 			$.each(game.bombs, function(i, b) {
-				animateBomb(b);
+				animateBody(b);
 			});
 			$.each(fires, function(i, f) {
-				animateFire(f);
+				animateBody(f);
+                if (f.sprite === f.sprites.length - 1 && f.animate === 1) {
+                    fires = _.without(fires, f);
+                    f.$img.remove();
+                }
 			});
 			$.each(firebricks, function(i, b) {
-				animateFirebrick(b);
+				animateBody(b);
 			});
+			if (++frame === 20) {
+				visualTime = new Date().getTime() - visualTime;
+				$fpsLabel.text('Total time: ' + time + '. Engine time: ' + gameTime + '. Drawing time: ' + visualTime + ' . fps: ' + fps);
+				frame = 0;
+			}
 		});
 
 		gameHandler.addListener('explodeBomb', function(bomb, data) {
@@ -2040,19 +2060,23 @@ GamePanel = function(gameHandler) {
 					for (var y = 0; y < data.fires[x].length; y++) {
 						if (data.fires[x][y]) {
 							var f = data.fires[x][y];
+							var os = 0;
 							if (f === 'l' || f === 'r') {
-								f = 'h';
+                                os = 5;
 							} else if (f === 'u' || f === 'd') {
-								f = 'v';
+                                os = 6;
 							}
-							var $img = $('<img>').attr('src', 'images/f' + f + '1.png').css('left', x).css('top', y).addClass('body');
-							fires.push({
-								f: f,
-								animate: 5,
-								sprite: 1,
-								$img: $img
-							});
-							$gamePanel.append($img);
+							var fire = {
+								x: x,
+								y: y,
+                                direction: null,
+								sprites: [0, 1, 2, 3]
+							};
+							addBody(fire, 'fires');
+                            fire.animate = 5;
+                            fire.offsetSprite = os;
+                            fire.maxAnimate = 1;
+                            fires.push(fire);
 						}
 					}
 				}
@@ -2062,7 +2086,9 @@ GamePanel = function(gameHandler) {
 					body.animate = 0;
 					body.sprite = 0;
 					firebricks.push(body);
-				}
+				} else if (body instanceof Bomb) {
+                    body.$img.remove();
+                }
 			});
 		});
 	});
@@ -2088,82 +2114,52 @@ GamePanel = function(gameHandler) {
 	});
 
 	var addBody = function(body, image) {
-		var $img = $('<img>').attr('src', 'images/' + image + '.png').css('left', body.x).css('top', body.y).addClass('body');
+		var $img = $('<div>').css('background', 'url(images/' + image + '.png)').css('left', body.x).css('top', body.y).addClass('body');
 		$gamePanel.append($img);
 		body.$img = $img;
+		body.sprite = 0;
+		body.offsetSprite = 0;
+		body.animate = 0;
+        body.animateCount = 0;
 		return $img;
 	};
 
 	var addPlayer = function(player) {
-		addBody(player, 'pl1').addClass('player');
-		player.animate = 0;
-		player.sprite = 0;
-		player.sprites = [1, 2, 1, 3];
+		addBody(player, 'pb').addClass('player');
+		player.sprites = [0, 1, 0, 2];
 	};
 
 	var placeBomb = function(bomb) {
-		bomb.animate = 0;
-		bomb.sprite = 0;
-		bomb.sprites = [1, 2, 3];
-		addBody(bomb, 'bomb1');
+		addBody(bomb, 'objects');
+		bomb.sprites = [0, 1, 2];
+		bomb.animate = 5;
+		bomb.offsetSprite = 2;
 	};
 
-	var animatePlayer = function(p) {
-		p.$img.css('left', p.x).css('top', p.y - 4);
-		if (p.direction !== null && p.speed > 0) {
-			if (p.lastDirection !== p.direction) {
-				p.animate = 0;
-				p.lastDirection = p.direction;
+	var animateBody = function(b) {
+		if (b.direction !== null && b.speed > 0) {
+			b.$img.css('left', b.x).css('top', b.y - 4);
+		}
+		if (b.animate > 0) {
+			if (b.lastDirection !== b.direction) {
+				b.animate = 0;
+				b.lastDirection = b.direction;
 			}
-			if (--p.animate < 0) {
-				p.animate = 5;
-				if (++p.sprite >= p.sprites.length) {
-					p.sprite = 0;
+			if (--b.animate <= 0) {
+				b.animate = 5;
+				if (++b.sprite >= b.sprites.length) {
+					b.sprite = 0;
 				}
-				var d;
-				if (p.direction.cos !== 0) {
-					d = p.direction.cos > 0 ? 'r': 'l';
-				} else if (p.direction.sin !== 0) {
-					d = p.direction.sin > 0 ? 'd': 'u';
+				var d = 0;
+				if (b.direction !== null) {
+					if (b.direction.cos !== 0) {
+						d = b.direction.cos > 0 ? 3: 2;
+					} else if (b.direction.sin !== 0) {
+						d = b.direction.sin > 0 ? 0: 1;
+					}
 				}
-				p.$img.attr('src', '/images/p' + d + p.sprites[p.sprite] + '.png');
+				b.$img.css('background-position', ( - (18 * (d + b.offsetSprite))) + 'px ' + ( - (22 * b.sprites[b.sprite])) + 'px');
 			}
-
-		}
-	};
-
-	var animateBomb = function(b) {
-		if (--b.animate < 0) {
-			b.animate = 5;
-			if (++b.sprite >= b.sprites.length) {
-				b.sprite = 0;
-			}
-			b.$img.attr('src', '/images/bomb' + b.sprites[b.sprite] + '.png');
-		}
-	};
-
-	var animateFire = function(f) {
-		if (--f.animate < 0) {
-			f.animate = 5;
-			if (++f.sprite > 4) {
-				_.without(fires, f);
-				f.$img.remove();
-				return;
-			}
-			f.$img.attr('src', '/images/f' + f.f + f.sprite + '.png');
-		}
-	};
-
-	var animateFirebrick = function(b) {
-		if (--b.animate < 0) {
-			b.animate = 5;
-			if (++b.sprite > 2) {
-				_.without(firebricks, b);
-				gameHandler.removeBody(b);
-				b.$img.remove();
-				return;
-			}
-			b.$img.attr('src', '/images/fb' + b.sprite + '.png');
 		}
 	};
 };
@@ -2206,7 +2202,7 @@ KeyboardHandler = function() {
 		}
 		if (dir !== null) {
 			if (keyCode !== e.keyCode) {
-				keyCode = e.keyCode;
+				keyCode = dir !== 'space' ? e.keyCode : keyCode;
 				keydown(dir);
 			}
 			e.stopPropagation();
@@ -2240,10 +2236,11 @@ FactorialTimer = function() {
 
 	this.start = function(callbackFn) {
 		callback = callbackFn;
-		step();
+		setInterval(step, 50);
 	};
 
 	var step = function() {
+		/*
 		time = Math.floor((new Date().getTime() - time) * 0.9 + lastTime * 0.1);
 		lastTime = time;
 		if (time > 50 && sleepTime > 45) {
@@ -2251,11 +2248,10 @@ FactorialTimer = function() {
 		} else if (time < 50 && sleepTime < 55) {
 			sleepTime++;
 		}
-		callback(time);
-
 		time = new Date().getTime();
+        */
+		callback();
 
-		setTimeout(step, sleepTime);
 	};
 };
 

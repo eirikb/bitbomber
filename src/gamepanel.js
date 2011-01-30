@@ -84,6 +84,7 @@ GamePanel = function(gameHandler) {
                 if (lastAnimation(firebrick)) {
 					firebricks = _.without(firebricks, firebrick);
 					firebrick.$img.remove();
+                    gameHandler.removeBody(firebrick);
                 }
 			});
 			if (++frame === 20) {

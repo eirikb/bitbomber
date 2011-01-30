@@ -548,7 +548,7 @@ OGE.World.prototype.slideBody = function(body, direction) {
  * THE SOFTWARE.
  *
  * @author Eirik Brandtzæg <eirikb@eirikb.no>
- * @Version 0.5
+ * @Version 0.6
  */
 
 // Prevent protoype inheritance from calling constructors twice when using apply

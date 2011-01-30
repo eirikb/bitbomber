@@ -1467,7 +1467,8 @@ Game.prototype.explodeBomb = function(bomb, data) {
 			x: bomb.x,
 			y: bomb.y,
 			bodies: [],
-			fires: []
+			fires: [],
+            bombs: []
 		};
 	}
 	var w = bomb.size * bomb.width,
@@ -1494,7 +1495,7 @@ Game.prototype.explodeBomb = function(bomb, data) {
 			}
 		}
 	};
-	this.removeBody(bomb);
+    data.bombs.push(bomb);
 	insertFire(bomb.x, bomb.y, 'c');
 	var checkHit = function(xDir, yDir, firevar1, firevar2) {
 		var xDiff = xDir * bomb.width,
@@ -1519,7 +1520,7 @@ Game.prototype.explodeBomb = function(bomb, data) {
 								return false;
 							}
 						}
-						if (body instanceof Bomb) {
+						if ((body instanceof Bomb) && !_.contains(data.bombs, body)) {
 							self.explodeBomb(body, data);
 						}
 					}

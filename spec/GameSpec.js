@@ -64,6 +64,8 @@ describe("Game", function() {
 		expect(g.players.length).toBe(1);
 		expect(g.bricks.length).toBe(1);
 
+		expect(g.getBomb(32, 32)).toBe(b5);
+        g.removeBodies(data.bombs, Bomb);
 		expect(g.getBomb(32, 32)).toBe(null);
 	});
 
@@ -99,6 +101,7 @@ describe("Game - general bomb testing", function() {
         expect(data.bodies.length).toBe(1);
         expect(data.fires.length).toBe(1);
         expect(g.world.getBodies(b1)).toContain(b1);
+        expect(data.bombs.length).toBe(1);
 
         g.removeBodies(data.bodies, Box);
         expect(g.world.getBodies(b1)).not.toContain(b1);
@@ -111,9 +114,9 @@ describe("Game - general bomb testing", function() {
         addBomb(40, 0, 1, 2);
         addBomb(40, 20, 10, 1);
         data = g.explodeBomb(b);
-        console.log(data)
         expect(data.bodies.length).toBe(1);
         expect(data.fires.length).toBe(13);
+        expect(data.bombs.length).toBe(4);
         expect(g.world.getBodies(b4)).toContain(b4);
         g.removeBodies(data.bodies, Box);
         expect(g.world.getBodies(b4)).toContain(b4);
@@ -124,7 +127,6 @@ describe("Game - general bomb testing", function() {
             });
         };
 
-        console.log(gf(data, 20, 0))
         expect(g.world.getBodies(b4)).toContain(b4);
         expect(gf(data, 20, 20).firevar).toBe('c');
         expect(gf(data, 20, 10).firevar).toBe('v');

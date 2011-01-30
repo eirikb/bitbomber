@@ -13,16 +13,18 @@ GamePanel = function(gameHandler) {
 
 		$gamePanel.width(game.world.width).height(game.world.height);
 
-		$.each(game.blocks, function(i, block) {
-			addBody(block, 'block');
+		_.each(game.blocks, function(block) {
+			addBody(block, 'objects');
 		});
 
-		$.each(game.bricks, function(i, brick) {
-			addBody(brick, 'brick');
+		_.each(game.bricks, function(brick) {
+			addBody(brick, 'objects');
+			brick.offsetSprite = 1;
+			setBackgroundPosition(brick);
 		});
 
-		$.each(game.players, function(i, p) {
-			addPlayer(p);
+		_.each(game.players, function(player) {
+			addPlayer(player);
 		});
 
 		keyboardHandler.keydown(function(dir) {
@@ -58,7 +60,7 @@ GamePanel = function(gameHandler) {
 		var frame = 0;
 		gameHandler.addListener('step', function(time, fps, gameTime) {
 			var visualTime = new Date().getTime();
-			$.each(game.players, function(i, p) {
+			_.each(game.players, function(p) {
 				if (p.animate === 0 && p.direction !== null && p.speed > 0) {
 					p.animate = 5;
 					p.sprite = 0;
@@ -67,18 +69,22 @@ GamePanel = function(gameHandler) {
 				}
 				animateBody(p);
 			});
-			$.each(game.bombs, function(i, b) {
-				animateBody(b);
+			_.each(game.bombs, function(bomb) {
+				animateBody(bomb);
 			});
-			$.each(fires, function(i, f) {
-				animateBody(f);
-				if (f.sprite === f.sprites.length - 1 && f.animate === 1) {
-					fires = _.without(fires, f);
-					f.$img.remove();
+			_.each(fires, function(fire) {
+				animateBody(fire);
+                if (lastAnimation(fire)) {
+					fires = _.without(fires, fire);
+					fire.$img.remove();
 				}
 			});
-			$.each(firebricks, function(i, b) {
-				animateBody(b);
+			_.each(firebricks, function(firebrick) {
+				animateBody(firebrick);
+                if (lastAnimation(firebrick)) {
+					firebricks = _.without(firebricks, firebrick);
+					firebrick.$img.remove();
+                }
 			});
 			if (++frame === 20) {
 				visualTime = new Date().getTime() - visualTime;
@@ -88,7 +94,9 @@ GamePanel = function(gameHandler) {
 		});
 
 		gameHandler.addListener('explodeBomb', function(bomb, data) {
-			bomb.$img.remove();
+			_.each(data.bombs, function(b) {
+				b.$img.remove();
+			});
 			_.each(data.fires, function(fire) {
 				var os = 0,
 				f = fire.firevar;
@@ -112,18 +120,21 @@ GamePanel = function(gameHandler) {
 					os = 6;
 					break;
 				}
+				addBody(fire, 'fires');
 				fire.direction = null,
 				fire.sprites = [0, 1, 2, 3];
-				addBody(fire, 'fires');
-				fire.animate = 5;
 				fire.offsetSprite = os;
-				fire.maxAnimate = 1;
+				fire.animate = 5;
 				fires.push(fire);
+
 			});
 			_.each(data.bodies, function(body) {
-				if (body instanceof Box && body.armor === bomb.power) {
-					body.animate = 0;
+				if (body instanceof Box) {
+					body.animate = 5;
 					body.sprite = 0;
+					body.offsetSprite = 1;
+					body.sprites = [1, 2];
+					body.animateTimer = 10;
 					firebricks.push(body);
 				} else if (body instanceof Bomb) {
 					body.$img.remove();
@@ -154,12 +165,15 @@ GamePanel = function(gameHandler) {
 
 	var addBody = function(body, image) {
 		var $img = $('<div>').css('background', 'url(images/' + image + '.png)').css('left', body.x).css('top', body.y).addClass('body');
-		$gamePanel.append($img);
 		body.$img = $img;
 		body.sprite = 0;
 		body.offsetSprite = 0;
 		body.animate = 0;
 		body.animateCount = 0;
+		body.sprites = [0];
+		body.animateTimer = 5;
+		setBackgroundPosition(body);
+		$gamePanel.append($img);
 		return $img;
 	};
 
@@ -185,21 +199,32 @@ GamePanel = function(gameHandler) {
 				b.lastDirection = b.direction;
 			}
 			if (--b.animate <= 0) {
-				b.animate = 5;
+				b.animate = b.animateTimer;
 				if (++b.sprite >= b.sprites.length) {
 					b.sprite = 0;
 				}
-				var d = 0;
+				var y = 0;
 				if (b.direction !== null) {
 					if (b.direction.cos !== 0) {
-						d = b.direction.cos > 0 ? 3: 2;
+						y = b.direction.cos > 0 ? 3: 2;
 					} else if (b.direction.sin !== 0) {
-						d = b.direction.sin > 0 ? 0: 1;
+						y = b.direction.sin > 0 ? 0: 1;
 					}
 				}
-				b.$img.css('background-position', ( - (18 * (d + b.offsetSprite))) + 'px ' + ( - (22 * b.sprites[b.sprite])) + 'px');
+				setBackgroundPosition(b, y);
 			}
 		}
+	};
+
+	var setBackgroundPosition = function(body, y) {
+		if (arguments.length === 1) {
+			y = 0;
+		}
+		body.$img.css('background-position', ( - (18 * (y + body.offsetSprite))) + 'px ' + ( - (22 * body.sprites[body.sprite])) + 'px');
+	};
+
+	var lastAnimation = function(body) {
+		return (body.sprite === body.sprites.length - 1 && body.animate === 1);
 	};
 };
 

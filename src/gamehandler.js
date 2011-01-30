@@ -116,6 +116,7 @@ GameHandler = function(lobbyHandler, socketClient) {
 		game.getPlayer(data.player).bombs++;
 		if (bomb !== null) {
 			var data = game.explodeBomb(bomb);
+            game.removeBodies(data.bombs, Bomb);
 			if (_.include(data.bodies, player)) {
 				//player.dead = true;
 				//game.removeBody(player);

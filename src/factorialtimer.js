@@ -6,7 +6,7 @@ FactorialTimer = function() {
 
 	this.start = function(callbackFn) {
 		callback = callbackFn;
-		setInterval(step, 50);
+		setInterval(step, sleepTime);
 	};
 
 	var step = function() {

@@ -22,7 +22,7 @@
  * THE SOFTWARE.
  *
  * @author Eirik Brandtzæg <eirikb@eirikb.no>
- * @Version 0.5
+ * @Version 0.6
  */
 
 var OGE = {};
@@ -415,7 +415,6 @@ OGE.World.prototype.step = function(steps) {
 };
 
 // Originally private methods
-
 OGE.World.prototype.addBodyToZones = function(body) {
 	var zones = this.getZones(body);
 	if (zones.length === 0) {
@@ -447,46 +446,75 @@ OGE.World.prototype.moveBody = function(body, direction, steps) {
 		this.removeBodyFromZones(body);
 		body.x += direction.cos;
 		body.y += direction.sin;
-
-		bodies = this.getBodies(body);
-		for (var j = 0; j < bodies.length; j++) {
-			var body2 = bodies[j];
-			if (body !== body2 && ! body2.intersects(lastX, lastY, body.width, body.height) && body2.intersects(body)) {
-				var collide1 = body.collide(body2) === true;
-				var collide2 = body2.collide(body) === true;
-				if (collide1 && collide2) {
-					body.x = lastX;
-					body.y = lastY;
-					this.addBodyToZones(body);
-					if (body.slide && j >= 0) {
-						this.slideBody(body, direction);
-					} else {
-						return;
+		if (body.x >= 0 && body.y >= 0 && body.x + body.width < this.width && body.y + body.height < this.height) {
+			bodies = this.getBodies(body);
+			for (var j = 0; j < bodies.length; j++) {
+				var body2 = bodies[j];
+				if (body !== body2 && ! body2.intersects(lastX, lastY, body.width, body.height) && body2.intersects(body)) {
+					var collide1 = body.collide(body2) === true;
+					var collide2 = body2.collide(body) === true;
+					if (collide1 && collide2) {
+						body.x = lastX;
+						body.y = lastY;
+						this.addBodyToZones(body);
+						if (body.slide && j >= 0) {
+							this.slideBody(body, direction);
+						} else {
+							return;
+						}
 					}
 				}
 			}
+			this.addBodyToZones(body);
+		} else {
+			body.x = lastX;
+			body.y = lastY;
+			break;
 		}
-		this.addBodyToZones(body);
 	}
 };
 
 OGE.World.prototype.slideBody = function(body, direction) {
 	var self = this;
 	var getIntersection = function(direction) {
-		var intersection = 0;
-		var x = body.x + direction.cos * 1.9 << 0;
+		var ignoreBodies = [],
+		bodies = self.getBodies(body),
+		intersection,
+		i,
+		j,
+		x,
+		y,
+		body2,
+		ignore;
+		for (i = 0; i < bodies.length; i++) {
+			body2 = bodies[i];
+			if (body2 !== body && body2.intersects(body)) {
+				ignoreBodies.push(body2);
+			}
+		}
+		intersection = 0;
+		x = body.x + direction.cos * 1.9 << 0;
 		if (x !== body.x) {
 			x = body.x + (x > body.x ? 1: - 1);
 		}
-		var y = body.y + direction.sin * 1.9 << 0;
+		y = body.y + direction.sin * 1.9 << 0;
 		if (y !== body.y) {
 			y = body.y + (y > body.y ? 1: - 1);
 		}
-		var bodies = self.getBodies(x, y, body.width, body.height);
-		for (var i = 0; i < bodies.length; i++) {
-			var body2 = bodies[i];
+		bodies = self.getBodies(x, y, body.width, body.height);
+		for (i = 0; i < bodies.length; i++) {
+			body2 = bodies[i];
 			if (body2 !== body && body2.intersects(x, y, body.width, body.height)) {
-				intersection += body2.intersection(x, y, body.width, body.height);
+				ignore = false;
+				for (j = 0; j < ignoreBodies.length; j++) {
+					if (body2 === ignoreBodies[j]) {
+						ignore = true;
+						break;
+					}
+				}
+				if (!ignore) {
+					intersection += body2.intersection(x, y, body.width, body.height);
+				}
 			}
 		}
 		return intersection << 0;
@@ -525,7 +553,7 @@ OGE.World.prototype.slideBody = function(body, direction) {
  * THE SOFTWARE.
  *
  * @author Eirik Brandtzæg <eirikb@eirikb.no>
- * @Version 0.4
+ * @Version 0.6
  */
 
 // Prevent protoype inheritance from calling constructors twice when using apply
@@ -657,10 +685,10 @@ Game.prototype.getBomb = function(x, y) {
 	return null;
 };
 
-Game.prototype.removeBoxes = function(bomb, data) {
+Game.prototype.removeBodies = function(bodies, type) {
 	var self = this;
-	_.each(data.bodies, function(body) {
-		if (body instanceof Box && body.armor === bomb.power) {
+	_.each(bodies, function(body) {
+		if (body instanceof type) {
 			self.removeBody(body);
 		}
 	});
@@ -672,56 +700,85 @@ Game.prototype.explodeBomb = function(bomb, data) {
 			x: bomb.x,
 			y: bomb.y,
 			bodies: [],
-			fires: []
+			fires: [],
+            bombs: []
 		};
 	}
 	var w = bomb.size * bomb.width,
 	h = bomb.size * bomb.height,
-	self = this;
-	this.removeBody(bomb);
-	var insertFlame = function(x, y, firevar) {
-		if (!data.fires[x]) {
-			data.fires[x] = [];
-		}
-		if (!data.fires[x][y]) {
-			data.fires[x][y] = firevar;
+	self = this,
+	insertFire = function(x, y, firevar) {
+		var d = function(e) {
+			return e.x === x && e.y === y;
+		};
+		if (typeof _.detect(data.bodies, d) === 'undefined') {
+			var fire = {
+				x: x,
+				y: y,
+				firevar: firevar
+			};
+			var oldFire = _.detect(data.fires, d);
+			if (typeof oldFire !== 'undefined') {
+				if (oldFire.firevar !== 'c' && _.contains('c', 'v', 'h', fire.firevar)) {
+					data.fires = _.without(data.fires, oldFire);
+					data.fires.push(fire);
+				}
+			} else {
+				data.fires.push(fire);
+			}
 		}
 	};
-	insertFlame(bomb.x, bomb.y, 'c');
-	var checkHit = function(minX, minY, maxX, maxY, firevar) {
-		for (var x = bomb.x + minX; x <= bomb.x + maxX; x += bomb.width) {
-			for (var y = bomb.y + minY; y <= bomb.y + maxY; y += bomb.height) {
-				if (x >= 0 && y >= 0 && x < self.world.width && y < self.world.height) {
-					var b = self.world.getBodies(x, y, bomb.width, bomb.height);
-					for (var i = 0; i < b.length; i++) {
-						var body = b[i];
-						if (body !== bomb && body.intersects(x, y, bomb.width, bomb.height)) {
-							if (!_.contains(data.bodies, body)) {
+    data.bombs.push(bomb);
+	insertFire(bomb.x, bomb.y, 'c');
+	var checkHit = function(xDir, yDir, firevar1, firevar2) {
+		var xDiff = xDir * bomb.width,
+		sx = bomb.x + xDiff,
+		ex = bomb.x + bomb.size * xDiff,
+		yDiff = yDir * bomb.height,
+		sy = bomb.y + yDiff,
+		ey = bomb.y + bomb.size * yDiff;
+		actualCheck = function(x, y, firevar) {
+			if (x >= 0 && y >= 0 && x < self.world.width && y < self.world.height) {
+				var b = self.world.getBodies(x, y, bomb.width, bomb.height);
+				for (var i = 0; i < b.length; i++) {
+					var body = b[i];
+					if (body !== bomb && body.intersects(x + 2, y + 2, bomb.width - 2, bomb.height - 2)) {
+						if (body.armor > bomb.power) {
+							return false;
+						} else {
+							if (! (body instanceof Bomb) && ! _.contains(data.bodies, body)) {
 								data.bodies.push(body);
 							}
-							if (body.armor >= bomb.power) {
-								if (data.fires[x] && data.fires[x][y]) {
-									data.fires[x][y] = null;
-								}
-								return;
-							} else {
-								self.removeBody(body);
-							}
-							if (body instanceof Bomb) {
-								self.explodeBomb(body, data);
+							if (body.armor === bomb.power) {
+								return false;
 							}
 						}
-						insertFlame(x, y, firevar);
+						if ((body instanceof Bomb) && !_.contains(data.bombs, body)) {
+							self.explodeBomb(body, data);
+						}
 					}
 				}
+				insertFire(x, y, firevar);
+			}
+			return true;
+		};
+
+		for (var x = sx; x !== ex + xDiff; x += xDiff) {
+			if (!actualCheck(x, bomb.y, x !== ex ? firevar1: firevar2)) {
+				break;
+			}
+		}
+		for (var y = sy; y !== ey + yDiff; y += yDiff) {
+			if (!actualCheck(bomb.x, y, y !== ey ? firevar1: firevar2)) {
+				break;
 			}
 		}
 	};
 
-	checkHit( - w, 0, - bomb.width, 0, 'l');
-	checkHit( + bomb.width, 0, + w, 0, 'r');
-	checkHit(0, - h, 0, - bomb.height, 'u');
-	checkHit(0, + bomb.height, 0, + h, 'd');
+	checkHit( - 1, 0, 'h', 'l');
+	checkHit(1, 0, 'h', 'r');
+	checkHit(0, - 1, 'v', 'u');
+	checkHit(0, 1, 'v', 'd');
 
 	return data;
 };
@@ -1130,6 +1187,7 @@ GameHandler = function(lobbyHandler, socketClient) {
 		game.getPlayer(data.player).bombs++;
 		if (bomb !== null) {
 			var data = game.explodeBomb(bomb);
+            game.removeBodies(data.bombs, Bomb);
 			if (_.include(data.bodies, player)) {
 				//player.dead = true;
 				//game.removeBody(player);
@@ -1197,7 +1255,8 @@ GamePanel = function(gameHandler) {
 	$fpsLabel = $('#fpsLabel'),
 	keyboardHandler,
 	fires = [],
-	firebricks = [];
+	firebricks = [],
+    version = 0.1;
 
 	gameHandler.addListener('startGame', function(game) {
 		keyboardHandler = new KeyboardHandler();
@@ -1207,16 +1266,18 @@ GamePanel = function(gameHandler) {
 
 		$gamePanel.width(game.world.width).height(game.world.height);
 
-		$.each(game.blocks, function(i, block) {
-			addBody(block, 'block');
+		_.each(game.blocks, function(block) {
+			addBody(block, 'objects');
 		});
 
-		$.each(game.bricks, function(i, brick) {
-			addBody(brick, 'brick');
+		_.each(game.bricks, function(brick) {
+			addBody(brick, 'objects');
+			brick.offsetSprite = 1;
+			setBackgroundPosition(brick);
 		});
 
-		$.each(game.players, function(i, p) {
-			addPlayer(p);
+		_.each(game.players, function(player) {
+			addPlayer(player);
 		});
 
 		keyboardHandler.keydown(function(dir) {
@@ -1252,7 +1313,7 @@ GamePanel = function(gameHandler) {
 		var frame = 0;
 		gameHandler.addListener('step', function(time, fps, gameTime) {
 			var visualTime = new Date().getTime();
-			$.each(game.players, function(i, p) {
+			_.each(game.players, function(p) {
 				if (p.animate === 0 && p.direction !== null && p.speed > 0) {
 					p.animate = 5;
 					p.sprite = 0;
@@ -1261,18 +1322,23 @@ GamePanel = function(gameHandler) {
 				}
 				animateBody(p);
 			});
-			$.each(game.bombs, function(i, b) {
-				animateBody(b);
+			_.each(game.bombs, function(bomb) {
+				animateBody(bomb);
 			});
-			$.each(fires, function(i, f) {
-				animateBody(f);
-                if (f.sprite === f.sprites.length - 1 && f.animate === 1) {
-                    fires = _.without(fires, f);
-                    f.$img.remove();
+			_.each(fires, function(fire) {
+				animateBody(fire);
+                if (lastAnimation(fire)) {
+					fires = _.without(fires, fire);
+					fire.$img.remove();
+				}
+			});
+			_.each(firebricks, function(firebrick) {
+				animateBody(firebrick);
+                if (lastAnimation(firebrick)) {
+					firebricks = _.without(firebricks, firebrick);
+					firebrick.$img.remove();
+                    gameHandler.removeBody(firebrick);
                 }
-			});
-			$.each(firebricks, function(i, b) {
-				animateBody(b);
 			});
 			if (++frame === 20) {
 				visualTime = new Date().getTime() - visualTime;
@@ -1282,41 +1348,51 @@ GamePanel = function(gameHandler) {
 		});
 
 		gameHandler.addListener('explodeBomb', function(bomb, data) {
-			bomb.$img.remove();
-			for (var x = 0; x < data.fires.length; x++) {
-				if (data.fires[x]) {
-					for (var y = 0; y < data.fires[x].length; y++) {
-						if (data.fires[x][y]) {
-							var f = data.fires[x][y];
-							var os = 0;
-							if (f === 'l' || f === 'r') {
-                                os = 5;
-							} else if (f === 'u' || f === 'd') {
-                                os = 6;
-							}
-							var fire = {
-								x: x,
-								y: y,
-                                direction: null,
-								sprites: [0, 1, 2, 3]
-							};
-							addBody(fire, 'fires');
-                            fire.animate = 5;
-                            fire.offsetSprite = os;
-                            fire.maxAnimate = 1;
-                            fires.push(fire);
-						}
-					}
+			_.each(data.bombs, function(b) {
+				b.$img.remove();
+			});
+			_.each(data.fires, function(fire) {
+				var os = 0,
+				f = fire.firevar;
+				switch (f) {
+				case 'l':
+					os = 2;
+					break;
+				case 'r':
+					os = 3;
+					break;
+				case 'u':
+					os = 4;
+					break;
+				case 'd':
+					os = 1;
+					break;
+				case 'h':
+					os = 5;
+					break;
+				case 'v':
+					os = 6;
+					break;
 				}
-			}
+				addBody(fire, 'fires');
+				fire.direction = null,
+				fire.sprites = [0, 1, 2, 3];
+				fire.offsetSprite = os;
+				fire.animate = 5;
+				fires.push(fire);
+
+			});
 			_.each(data.bodies, function(body) {
-				if (body instanceof Box && body.armor === bomb.power) {
-					body.animate = 0;
+				if (body instanceof Box) {
+					body.animate = 5;
 					body.sprite = 0;
+					body.offsetSprite = 1;
+					body.sprites = [1, 2];
+					body.animateTimer = 10;
 					firebricks.push(body);
 				} else if (body instanceof Bomb) {
-                    body.$img.remove();
-                }
+					body.$img.remove();
+				}
 			});
 		});
 	});
@@ -1343,12 +1419,15 @@ GamePanel = function(gameHandler) {
 
 	var addBody = function(body, image) {
 		var $img = $('<div>').css('background', 'url(images/' + image + '.png)').css('left', body.x).css('top', body.y).addClass('body');
-		$gamePanel.append($img);
 		body.$img = $img;
 		body.sprite = 0;
 		body.offsetSprite = 0;
 		body.animate = 0;
-        body.animateCount = 0;
+		body.animateCount = 0;
+		body.sprites = [0];
+		body.animateTimer = 5;
+		setBackgroundPosition(body);
+		$gamePanel.append($img);
 		return $img;
 	};
 
@@ -1374,21 +1453,32 @@ GamePanel = function(gameHandler) {
 				b.lastDirection = b.direction;
 			}
 			if (--b.animate <= 0) {
-				b.animate = 5;
+				b.animate = b.animateTimer;
 				if (++b.sprite >= b.sprites.length) {
 					b.sprite = 0;
 				}
-				var d = 0;
+				var y = 0;
 				if (b.direction !== null) {
 					if (b.direction.cos !== 0) {
-						d = b.direction.cos > 0 ? 3: 2;
+						y = b.direction.cos > 0 ? 3: 2;
 					} else if (b.direction.sin !== 0) {
-						d = b.direction.sin > 0 ? 0: 1;
+						y = b.direction.sin > 0 ? 0: 1;
 					}
 				}
-				b.$img.css('background-position', ( - (18 * (d + b.offsetSprite))) + 'px ' + ( - (22 * b.sprites[b.sprite])) + 'px');
+				setBackgroundPosition(b, y);
 			}
 		}
+	};
+
+	var setBackgroundPosition = function(body, y) {
+		if (arguments.length === 1) {
+			y = 0;
+		}
+		body.$img.css('background-position', ( - (18 * (y + body.offsetSprite))) + 'px ' + ( - (22 * body.sprites[body.sprite])) + 'px');
+	};
+
+	var lastAnimation = function(body) {
+		return (body.sprite === body.sprites.length - 1 && body.animate === 1);
 	};
 };
 
@@ -1464,7 +1554,7 @@ FactorialTimer = function() {
 
 	this.start = function(callbackFn) {
 		callback = callbackFn;
-		setInterval(step, 50);
+		setInterval(step, sleepTime);
 	};
 
 	var step = function() {

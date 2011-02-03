@@ -23,7 +23,7 @@ all: update lint build
 
 update:
 	git submodule update --init
-	$(call clone_or_pull, ${BOMBERMAN_GAME}, git@github.com:/eirikb/bomberman-game)
+	$(call clone_or_pull, ${BOMBERMAN_GAME_DIR}, git@github.com:/eirikb/bomberman-game)
 
 lint: 
 	java -jar ${JSLINT4JAVA} ${BASE_FILES}

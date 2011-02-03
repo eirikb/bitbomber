@@ -14,6 +14,8 @@ utils.log = function(cmd, msg) {
 };
 
 $(function() {
+	var version = 0.1;
+
 	$infoArea = $('#infoArea');
 	var httpClient = new HttpClient(),
 	socketClient = new SocketClient(),
@@ -21,5 +23,6 @@ $(function() {
 	lobbyHandler = new LobbyHandler(gameHandler, httpClient, socketClient),
 	gamePanel = new GamePanel(gameHandler),
 	lobbyPanel = new LobbyPanel(lobbyHandler);
+	utils.log({cmd: 'versions', result: 'OGE: ' + OGE.version + '. Game: ' + Game.version + '. Client: ' + version});
 });
 

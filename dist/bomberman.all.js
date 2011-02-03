@@ -797,7 +797,9 @@
  * @Version 0.6
  */
 
-var OGE = {};
+var OGE = {
+	version: 0.6
+};
 
 /**
  * Direction object
@@ -1448,6 +1450,8 @@ Game = function(width, height) {
 	this.maxPlayers = 4;
 };
 
+Game.version = 0.6;
+
 Game.prototype.getBomb = function(x, y) {
 	for (var i = 0; i < this.bombs.length; i++) {
 		if (this.bombs[i].x === x && this.bombs[i].y === y) {
@@ -1695,6 +1699,8 @@ utils.log = function(cmd, msg) {
 };
 
 $(function() {
+	var version = 0.1;
+
 	$infoArea = $('#infoArea');
 	var httpClient = new HttpClient(),
 	socketClient = new SocketClient(),
@@ -1702,6 +1708,7 @@ $(function() {
 	lobbyHandler = new LobbyHandler(gameHandler, httpClient, socketClient),
 	gamePanel = new GamePanel(gameHandler),
 	lobbyPanel = new LobbyPanel(lobbyHandler);
+	utils.log({cmd: 'versions', result: 'OGE: ' + OGE.version + '. Game: ' + Game.version + '. Client: ' + version});
 });
 
 LobbyHandler = function(gameHandler, httpClient, socketClient) {

@@ -25,7 +25,9 @@
  * @Version 0.6
  */
 
-var OGE = {};
+var OGE = {
+	version: 0.6
+};
 
 /**
  * Direction object
@@ -675,6 +677,8 @@ Game = function(width, height) {
 
 	this.maxPlayers = 4;
 };
+
+Game.version = 0.6;
 
 Game.prototype.getBomb = function(x, y) {
 	for (var i = 0; i < this.bombs.length; i++) {

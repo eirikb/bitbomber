@@ -4,7 +4,3 @@
 [submodule "lib/jasmine"]
     path = lib/jasmine
     url = https://github.com/pivotal/jasmine.git
-[submodule "lib/oge"]
-    path = lib/oge
-    url = https://github.com/eirikb/oge.git
-

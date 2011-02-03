@@ -15,6 +15,8 @@ Game = function(width, height) {
 	this.maxPlayers = 4;
 };
 
+Game.version = 0.6;
+
 Game.prototype.getBomb = function(x, y) {
 	for (var i = 0; i < this.bombs.length; i++) {
 		if (this.bombs[i].x === x && this.bombs[i].y === y) {

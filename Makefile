@@ -5,8 +5,21 @@ all: update hack
 
 update:
 	git submodule update --init
+	$(call clone_or_pull, ${BOMBERMAN_CLIENT_DIR}, git@github.com:/eirikb/bomberman-client.git)
+	$(call clone_or_pull, lib/bomberman-game, git@github.com:/eirikb/bomberman-game.git)
 
 hack:
 	cd public; \
 		ln -s ../${BOMBERMAN_CLIENT_DIR}/public/* ./; \
 		ln -s ../${BOMBERMAN_CLIENT_DIR}/dist/bomberman.all.min.js ./;
+
+define clone_or_pull
+-@@if test ! -d $(strip ${1})/.git; then \
+	echo "Cloning $(strip ${1})..."; \
+	git clone $(strip ${verbose}) --depth=1 $(strip ${2}) $(strip ${1}); \
+	else \
+	echo "Pulling $(strip ${1})..."; \
+	git --git-dir=$(strip ${1})/.git pull $(strip ${verbose}) origin master; \
+	fi
+
+endef

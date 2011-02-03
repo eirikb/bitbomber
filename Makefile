@@ -10,8 +10,15 @@ update:
 
 hack:
 	cd public; \
-		ln -s ../${BOMBERMAN_CLIENT_DIR}/public/* ./; \
-		ln -s ../${BOMBERMAN_CLIENT_DIR}/dist/bomberman.all.min.js ./;
+		ln -sf ../${BOMBERMAN_CLIENT_DIR}/public/* ./; \
+		ln -sf ../${BOMBERMAN_CLIENT_DIR}/dist/bomberman.all.min.js ./;
+
+dev:
+	cd public; \
+		ln -sf ../${BOMBERMAN_CLIENT_DIR}/public/images ./; \
+		ln -sf ../${BOMBERMAN_CLIENT_DIR}/public/bomberman.css ./; \
+		ln -sf ../${BOMBERMAN_CLIENT_DIR}/src/* ./; \
+		ln -sf ../lib/bomberman-game/dist/bomberman.all.js ./
 
 define clone_or_pull
 -@@if test ! -d $(strip ${1})/.git; then \

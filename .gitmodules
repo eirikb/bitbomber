@@ -1,6 +1,3 @@
 [submodule "lib/underscore"]
     path = lib/underscore
     url = https://github.com/documentcloud/underscore.git
-[submodule "lib/jasmine"]
-    path = lib/jasmine
-    url = https://github.com/pivotal/jasmine.git

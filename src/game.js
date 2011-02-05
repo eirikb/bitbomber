@@ -42,7 +42,7 @@ Game.prototype.explodeBomb = function(bomb, data) {
 			y: bomb.y,
 			bodies: [],
 			fires: [],
-            bombs: []
+			bombs: []
 		};
 	}
 	var w = bomb.size * bomb.width,
@@ -69,7 +69,7 @@ Game.prototype.explodeBomb = function(bomb, data) {
 			}
 		}
 	};
-    data.bombs.push(bomb);
+	data.bombs.push(bomb);
 	insertFire(bomb.x, bomb.y, 'c');
 	var checkHit = function(xDir, yDir, firevar1, firevar2) {
 		var xDiff = xDir * bomb.width,
@@ -94,7 +94,7 @@ Game.prototype.explodeBomb = function(bomb, data) {
 								return false;
 							}
 						}
-						if ((body instanceof Bomb) && !_.contains(data.bombs, body)) {
+						if ((body instanceof Bomb) && ! _.contains(data.bombs, body)) {
 							self.explodeBomb(body, data);
 						}
 					}
@@ -145,7 +145,8 @@ Game.prototype.serialize = function() {
 	var self = this;
 	var data = {
 		width: this.world.width,
-		height: this.world.height
+		height: this.world.height,
+		guid: this.guid
 	};
 	var serializeboxes = function(name, attrs) {
 		if (self[name].length > 0) {
@@ -245,6 +246,7 @@ Game.deserialize = function(data) {
 			game.addBody(Player.deserialize(p), true);
 		});
 	}
+	game.guid = data.guid;
 	return game;
 };
 

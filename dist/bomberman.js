@@ -930,18 +930,18 @@ $(function() {
 	var version = 0.1;
 
 	$infoArea = $('#infoArea');
-	var httpClient = new HttpClient(),
+    var lobbyHandler,
+	httpClient = new HttpClient(),
 	socketClient = new SocketClient(),
 	gameHandler = new GameHandler(lobbyHandler, socketClient),
-	lobbyHandler = new LobbyHandler(gameHandler, httpClient, socketClient),
 	gamePanel = new GamePanel(gameHandler),
 	lobbyPanel = new LobbyPanel(lobbyHandler);
+	lobbyHandler = new LobbyHandler(gameHandler, httpClient, socketClient);
 	utils.log({cmd: 'versions', result: 'OGE: ' + OGE.version + '. Game: ' + Game.version + '. Client: ' + version});
 });
 
 LobbyHandler = function(gameHandler, httpClient, socketClient) {
-	var httpClient = new HttpClient(this),
-	user;
+	var user;
 
 	this.createGame = function(fn) {
 		httpClient.createGame(function(data) {
@@ -1103,12 +1103,12 @@ GameHandler = function(lobbyHandler, socketClient) {
 			game.world.step();
             gameTime = new Date().getTime() - gameTime;
             var fps = Math.floor(1000 / time);
-			_.each(listeners['step'], function(callback) {
+			_.each(listeners.step, function(callback) {
 				callback(time, fps, gameTime);
 			});
             time = new Date().getTime();
 		});
-		_.each(listeners['startGame'], function(callback) {
+		_.each(listeners.startGame, function(callback) {
 			callback(game);
 		});
 	};
@@ -1156,7 +1156,7 @@ GameHandler = function(lobbyHandler, socketClient) {
 		p = Player.deserialize(data.player);
 		game.addBody(p, true);
 
-		_.each(listeners['addPlayer'], function(callback) {
+		_.each(listeners.addPlayer, function(callback) {
 			callback(p);
 		});
 	});
@@ -1184,7 +1184,7 @@ GameHandler = function(lobbyHandler, socketClient) {
 	socketClient.addListener('placeBomb', function(result, data) {
 		var bomb = new Bomb(data.x, data.y, 16, 16);
 		game.addBody(bomb);
-		_.each(listeners['placeBomb'], function(callback) {
+		_.each(listeners.placeBomb, function(callback) {
 			callback(bomb);
 		});
 	});
@@ -1193,20 +1193,20 @@ GameHandler = function(lobbyHandler, socketClient) {
 		var bomb = game.getBomb(data.x, data.y);
 		game.getPlayer(data.player).bombs++;
 		if (bomb !== null) {
-			var data = game.explodeBomb(bomb);
-            game.removeBodies(data.bombs, Bomb);
-			if (_.include(data.bodies, player)) {
+			var eData = game.explodeBomb(bomb);
+            game.removeBodies(eData.bombs, Bomb);
+			if (_.include(eData.bodies, player)) {
 				//player.dead = true;
 				//game.removeBody(player);
-				_.each(listeners['meDead'], function(callback) {
+				//_.each(listeners.meDead, function(callback) {
 				//	callback(player);
-				});
+				//});
                 player.x = 0;
                 player.y = 0;
 				socketClient.send('playerDead', {});
 			}
-			_.each(listeners['explodeBomb'], function(callback) {
-				callback(bomb, data);
+			_.each(listeners.explodeBomb, function(callback) {
+				callback(bomb, eData);
 			});
 		}
 	});
@@ -1216,7 +1216,7 @@ GameHandler = function(lobbyHandler, socketClient) {
 		//game.removeBody(p);
         p.x = 0;
         p.y = 0;
-		_.each(listeners['playerDead'], function(callback) {
+		_.each(listeners.playerDead, function(callback) {
 			//callback(p);
 		});
 	});
@@ -1224,7 +1224,7 @@ GameHandler = function(lobbyHandler, socketClient) {
 	socketClient.addListener('resurectPlayer', function(result, data) {
 		var p = game.getPlayer(data.player);
 		game.addBody(p);
-		_.each(listeners['resurectPlayer'], function(callback) {
+		_.each(listeners.resurectPlayer, function(callback) {
 			callback(p);
 		});
 	});
@@ -1382,7 +1382,7 @@ GamePanel = function(gameHandler) {
 					break;
 				}
 				addBody(fire, 'fires');
-				fire.direction = null,
+				fire.direction = null;
 				fire.sprites = [0, 1, 2, 3];
 				fire.offsetSprite = os;
 				fire.animate = 5;
@@ -1439,7 +1439,7 @@ GamePanel = function(gameHandler) {
 	};
 
 	var addPlayer = function(player) {
-		addBody(player, 'pb').addClass('player');
+		addBody(player, 'players').addClass('player');
 		player.sprites = [0, 1, 0, 2];
 	};
 

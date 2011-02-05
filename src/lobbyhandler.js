@@ -1,6 +1,5 @@
 LobbyHandler = function(gameHandler, httpClient, socketClient) {
-	var httpClient = new HttpClient(this),
-	user;
+	var user;
 
 	this.createGame = function(fn) {
 		httpClient.createGame(function(data) {

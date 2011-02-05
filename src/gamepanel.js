@@ -123,7 +123,7 @@ GamePanel = function(gameHandler) {
 					break;
 				}
 				addBody(fire, 'fires');
-				fire.direction = null,
+				fire.direction = null;
 				fire.sprites = [0, 1, 2, 3];
 				fire.offsetSprite = os;
 				fire.animate = 5;
@@ -180,7 +180,7 @@ GamePanel = function(gameHandler) {
 	};
 
 	var addPlayer = function(player) {
-		addBody(player, 'pb').addClass('player');
+		addBody(player, 'players').addClass('player');
 		player.sprites = [0, 1, 0, 2];
 	};
 

@@ -17,12 +17,13 @@ $(function() {
 	var version = 0.1;
 
 	$infoArea = $('#infoArea');
-	var httpClient = new HttpClient(),
+    var lobbyHandler,
+	httpClient = new HttpClient(),
 	socketClient = new SocketClient(),
 	gameHandler = new GameHandler(lobbyHandler, socketClient),
-	lobbyHandler = new LobbyHandler(gameHandler, httpClient, socketClient),
 	gamePanel = new GamePanel(gameHandler),
 	lobbyPanel = new LobbyPanel(lobbyHandler);
+	lobbyHandler = new LobbyHandler(gameHandler, httpClient, socketClient);
 	utils.log({cmd: 'versions', result: 'OGE: ' + OGE.version + '. Game: ' + Game.version + '. Client: ' + version});
 });
 

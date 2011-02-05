@@ -448,7 +448,7 @@ OGE.World.prototype.moveBody = function(body, direction, steps) {
 		this.removeBodyFromZones(body);
 		body.x += direction.cos;
 		body.y += direction.sin;
-		if (body.x >= 0 && body.y >= 0 && body.x + body.width < this.width && body.y + body.height < this.height) {
+		if (body.x >= 0 && body.y >= 0 && body.x + body.width <= this.width && body.y + body.height <= this.height) {
 			bodies = this.getBodies(body);
 			for (var j = 0; j < bodies.length; j++) {
 				var body2 = bodies[j];
@@ -705,7 +705,7 @@ Game.prototype.explodeBomb = function(bomb, data) {
 			y: bomb.y,
 			bodies: [],
 			fires: [],
-            bombs: []
+			bombs: []
 		};
 	}
 	var w = bomb.size * bomb.width,
@@ -732,7 +732,7 @@ Game.prototype.explodeBomb = function(bomb, data) {
 			}
 		}
 	};
-    data.bombs.push(bomb);
+	data.bombs.push(bomb);
 	insertFire(bomb.x, bomb.y, 'c');
 	var checkHit = function(xDir, yDir, firevar1, firevar2) {
 		var xDiff = xDir * bomb.width,
@@ -757,7 +757,7 @@ Game.prototype.explodeBomb = function(bomb, data) {
 								return false;
 							}
 						}
-						if ((body instanceof Bomb) && !_.contains(data.bombs, body)) {
+						if ((body instanceof Bomb) && ! _.contains(data.bombs, body)) {
 							self.explodeBomb(body, data);
 						}
 					}
@@ -808,7 +808,8 @@ Game.prototype.serialize = function() {
 	var self = this;
 	var data = {
 		width: this.world.width,
-		height: this.world.height
+		height: this.world.height,
+		guid: this.guid
 	};
 	var serializeboxes = function(name, attrs) {
 		if (self[name].length > 0) {
@@ -908,6 +909,7 @@ Game.deserialize = function(data) {
 			game.addBody(Player.deserialize(p), true);
 		});
 	}
+	game.guid = data.guid;
 	return game;
 };
 

@@ -3,8 +3,7 @@ GamePanel = function(gameHandler) {
 	$fpsLabel = $('#fpsLabel'),
 	keyboardHandler,
 	fires = [],
-	firebricks = [],
-    version = 0.1;
+	firebricks = [];
 
 	gameHandler.addListener('startGame', function(game) {
 		keyboardHandler = new KeyboardHandler();

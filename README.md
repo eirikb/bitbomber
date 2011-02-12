@@ -1,2 +1,2 @@
-## Bomberman client
+## Blasting Bob  - client
 

@@ -14,7 +14,7 @@ utils.log = function(cmd, msg) {
 };
 
 $(function() {
-	var version = 0.1;
+	var version = 0.2;
 
 	$infoArea = $('#infoArea');
     var lobbyHandler,

@@ -5,9 +5,9 @@ url = require('url'),
 players = require('players'),
 games = require('games'),
 ingame = require('ingame'),
-OGE = require('../lib/bomberman-game/dist/bomberman'),
+OGE = require('../lib/blastingbob-game/dist/blastingbob'),
 io = require('../lib/socket.io/lib/socket.io'),
-b = require('bomberman');
+b = require('blastingbob');
 
 global._ = require('../lib/underscore/underscore');
 
@@ -20,7 +20,7 @@ exports.openGames = {};
 exports.playerNicks = {};
 exports.playerGuids = {};
 
-function Bomberman(port) {
+function BlastingBob(port) {
 	global._ = _;
 	ingame.startBombTimer();
 	var server = http.createServer(function(request, response) {
@@ -116,5 +116,5 @@ function Bomberman(port) {
 	c.log('Server running on port ' + port);
 };
 
-module.exports = Bomberman;
+module.exports = BlastingBob;
 

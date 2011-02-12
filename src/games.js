@@ -1,7 +1,7 @@
 var players = require('players'),
 c = require('commons'),
 _ = require('../lib/underscore/underscore'),
-b = require('bomberman'),
+b = require('blastingbob'),
 ingame = require('ingame');
 
 exports.playerLogout = function(cmd, player) {

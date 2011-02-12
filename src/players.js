@@ -1,6 +1,6 @@
 var games = require('games'),
 c = require('commons'),
-b = require('bomberman');
+b = require('blastingbob');
 
 var logPlayer = function(guid, action) {
 	c.log('Player ' + action + ': ' + b.playerGuids[guid].nick + ' - ' + guid);

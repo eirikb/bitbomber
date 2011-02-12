@@ -1,24 +1,24 @@
 LIB_DIR = lib
-BOMBERMAN_CLIENT_DIR = ${LIB_DIR}/bomberman-client
+BLASTINGBOB_CLIENT_DIR = ${LIB_DIR}/blastingbob-client
 
 all: update hack
 
 update:
 	git submodule update --init
-	$(call clone_or_pull, ${BOMBERMAN_CLIENT_DIR}, git@github.com:/eirikb/bomberman-client.git)
-	$(call clone_or_pull, lib/bomberman-game, git@github.com:/eirikb/bomberman-game.git)
+	$(call clone_or_pull, ${BLASTINGBOB_CLIENT_DIR}, git@github.com:/eirikb/blastingbob-client.git)
+	$(call clone_or_pull, lib/blastingbob-game, git@github.com:/eirikb/blastingbob-game.git)
 
 hack:
 	cd public; \
-		ln -sf ../${BOMBERMAN_CLIENT_DIR}/public/* ./; \
-		ln -sf ../${BOMBERMAN_CLIENT_DIR}/dist/bomberman.all.min.js ./;
+		ln -sf ../${BLASTINGBOB_CLIENT_DIR}/public/* ./; \
+		ln -sf ../${BLASTINGBOB_CLIENT_DIR}/dist/blastingbob.all.min.js ./;
 
 dev:
 	cd public; \
-		ln -sf ../${BOMBERMAN_CLIENT_DIR}/public/images ./; \
-		ln -sf ../${BOMBERMAN_CLIENT_DIR}/public/bomberman.css ./; \
-		ln -sf ../${BOMBERMAN_CLIENT_DIR}/src/* ./; \
-		ln -sf ../lib/bomberman-game/dist/bomberman.all.js ./
+		ln -sf ../${BLASTIGBOB_CLIENT_DIR}/public/images ./; \
+		ln -sf ../${BLASTINBOB_CLIENT_DIR}/public/blastingbob.css ./; \
+		ln -sf ../${BLASTINGBOB_CLIENT_DIR}/src/* ./; \
+		ln -sf ../lib/blastingbob-game/dist/blastingbob.all.js ./
 
 define clone_or_pull
 -@@if test ! -d $(strip ${1})/.git; then \

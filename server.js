@@ -8,6 +8,6 @@ process.addListener('uncaughtException', function (err, stack) {
   console.log('------------------------');
 });
 
-var Bomberman = require('./src/bomberman');
+var BlastingBob = require('./src/blastingbob');
 
-new Bomberman(8000);
+new BlastingBob(8000);

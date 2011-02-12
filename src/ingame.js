@@ -1,5 +1,5 @@
 var c = require('commons'),
-b = require('bomberman');
+b = require('blastingbob');
 
 var bombs = [];
 

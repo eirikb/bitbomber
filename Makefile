@@ -13,10 +13,10 @@ BASE_FILES = ${SRC_DIR}/base.js\
 			 ${SRC_DIR}/game.js
 JSLINT4JAVA = ${LIB_DIR}/jslint4java-1.4.6.jar
 CLOSURE_COMPILER = ${LIB_DIR}/compiler.jar
-BUNDLE_VERSION = ${DIST_DIR}/bomberman.js
-BUNDLE_ALL_VERSION = ${DIST_DIR}/bomberman.all.js
-MIN_VERSION = ${DIST_DIR}/bomberman.min.js
-MIN_ALL_VERSION = ${DIST_DIR}/bomberman.all.min.js
+BUNDLE_VERSION = ${DIST_DIR}/blastingbob.js
+BUNDLE_ALL_VERSION = ${DIST_DIR}/blastingbob.all.js
+MIN_VERSION = ${DIST_DIR}/blastingbob.min.js
+MIN_ALL_VERSION = ${DIST_DIR}/blastingbob.all.min.js
 
 all: update lint build
 

@@ -1327,7 +1327,7 @@ OGE.World.prototype.slideBody = function(body, direction) {
  * THE SOFTWARE.
  *
  * @author Eirik Brandtzæg <eirikb@eirikb.no>
- * @Version 0.6
+ * @Version 0.7
  */
 
 // Prevent protoype inheritance from calling constructors twice when using apply
@@ -1450,7 +1450,7 @@ Game = function(width, height) {
 	this.maxPlayers = 4;
 };
 
-Game.version = 0.6;
+Game.version = 0.7;
 
 Game.prototype.getBomb = function(x, y) {
 	for (var i = 0; i < this.bombs.length; i++) {

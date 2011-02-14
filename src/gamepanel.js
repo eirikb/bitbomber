@@ -1,31 +1,119 @@
 GamePanel = function(gameHandler) {
 	var $gamePanel = $('#gamePanel'),
-	$fpsLabel = $('#fpsLabel'),
+	REFRESH_RATE = 30,
 	keyboardHandler,
-	fires = [],
-	firebricks = [];
+	lastDir,
+	count = 0,
+	playerAnimations = [],
+	fireAnimations = [],
+	playerAnimation = function(direction, color, type, numberOfFrame) {
+		return new $.gameQuery.Animation({
+			imageURL: 'images/players.png',
+			numberOfFrame: numberOfFrame,
+			delta: 22,
+			rate: 120,
+			type: $.gameQuery.ANIMATION_VERTICAL,
+			offsetx: direction * 18 + color * (4 * 18),
+			offsety: type * (3 * 22)
+		});
+	},
+	addBody = function(body, name, animation, cb) {
+        name += '-' + ++count;
+		$('#background').addSprite(name, {
+			animation: animation,
+			width: 16,
+			height: 16,
+			posx: body.x,
+			posy: body.y,
+			callback: cb
+		});
+        body.name = name;
+	},
+	addBodies = function(bodies, name, animation) {
+		_.each(bodies, function(b) {
+			addBody(b, name, animation);
+		});
+	},
+	blockSprite = new $.gameQuery.Animation({
+		imageURL: 'images/objects.png'
+	}),
+	brickSprite = new $.gameQuery.Animation({
+		imageURL: 'images/objects.png',
+		offsetx: 18
+	}),
+	bombAnimation = new $.gameQuery.Animation({
+		imageURL: 'images/objects.png',
+		numberOfFrame: 3,
+		delta: 22,
+		rate: 120,
+		offsetx: 2 * 18,
+		type: $.gameQuery.ANIMATION_VERTICAL,
+	}),
+	fireAnimation = function(spriteX) {
+		return new $.gameQuery.Animation({
+			imageURL: 'images/fires.png',
+			numberOfFrame: 4,
+			delta: 22,
+			rate: 120,
+			type: $.gameQuery.ANIMATION_VERTICAL | $.gameQuery.ANIMATION_ONCE | $.gameQuery.ANIMATION_CALLBACK,
+			offsetx: 18 * spriteX
+		});
+	},
+	fireBrick = new $.gameQuery.Animation({
+		imageURL: 'images/objects.png',
+		numberOfFrame: 2,
+		delta: 22,
+		rate: 360,
+		type: $.gameQuery.ANIMATION_VERTICAL | $.gameQuery.ANIMATION_ONCE | $.gameQuery.ANIMATION_CALLBACK,
+		offsetx: 18,
+		offsety: 22
+	});
+
+	playerAnimations['left'] = playerAnimation(2, 0, 0, 3);
+	playerAnimations['left-idle'] = playerAnimation(2, 0, 0, 1);
+	playerAnimations['up'] = playerAnimation(1, 0, 0, 3);
+	playerAnimations['up-idle'] = playerAnimation(1, 0, 0, 1);
+	playerAnimations['right'] = playerAnimation(3, 0, 0, 3);
+	playerAnimations['right-idle'] = playerAnimation(3, 0, 0, 1);
+	playerAnimations['down'] = playerAnimation(0, 0, 0, 3);
+	playerAnimations['down-idle'] = playerAnimation(0, 0, 0, 1);
+
+	fireAnimations['c'] = fireAnimation(0);
+	fireAnimations['d'] = fireAnimation(1);
+	fireAnimations['l'] = fireAnimation(2);
+	fireAnimations['r'] = fireAnimation(3);
+	fireAnimations['u'] = fireAnimation(4);
+	fireAnimations['h'] = fireAnimation(5);
+	fireAnimations['v'] = fireAnimation(6);
 
 	gameHandler.addListener('startGame', function(game) {
 		keyboardHandler = new KeyboardHandler();
-
-		$gamePanel.find('*').remove();
-		$gamePanel.show();
-
-		$gamePanel.width(game.world.width).height(game.world.height);
-
-		_.each(game.blocks, function(block) {
-			addBody(block, 'objects');
-		});
-
-		_.each(game.bricks, function(brick) {
-			addBody(brick, 'objects');
-			brick.offsetSprite = 1;
-			setBackgroundPosition(brick);
-		});
-
+		$gamePanel.playground({
+			width: game.world.width,
+			height: game.world.height,
+			refreshRate: REFRESH_RATE
+		}).addGroup('players').addGroup('background');
 		_.each(game.players, function(player) {
-			addPlayer(player);
+			$('#players').addSprite("player", {
+				animation: playerAnimations['down-idle'],
+				width: 18,
+				height: 22,
+				posx: player.x,
+				posy: player.y
+			});
+			$('#player')[0].player = player;
 		});
+
+		addBodies(game.blocks, 'block', blockSprite);
+		addBodies(game.bricks, 'brick', brickSprite);
+
+		$.playground().startGame(function() {}).registerCallback(function() {
+			$('#player').each(function() {
+				$(this).css('left', this.player.x).css('top', this.player.y - 6);
+			});
+			gameHandler.step();
+		},
+		REFRESH_RATE);
 
 		keyboardHandler.keydown(function(dir) {
 			var cos = 0,
@@ -52,180 +140,46 @@ GamePanel = function(gameHandler) {
 			}
 			if (cos !== 0 || sin !== 0) {
 				gameHandler.startMove(cos, sin);
+				$('#player').setAnimation(playerAnimations[dir]);
+				lastDir = dir;
 			}
 		}).keyup(function(e) {
 			gameHandler.endMove();
+			$('#player').setAnimation(playerAnimations[lastDir + '-idle']);
 		});
+	});
 
-		var frame = 0;
-		gameHandler.addListener('step', function(time, fps, gameTime) {
-			var visualTime = new Date().getTime();
-			_.each(game.players, function(p) {
-				if (p.animate === 0 && p.direction !== null && p.speed > 0) {
-					p.animate = 5;
-					p.sprite = 0;
-				} else if (p.animate > 0 && p.direction === null || p.speed === 0) {
-					p.animate = 0;
-				}
-				animateBody(p);
+	gameHandler.addListener('explodeBomb', function(bomb, data) {
+		_.each(data.bombs, function(b) {
+			$('#' + b.name).remove();
+		});
+		_.each(data.fires, function(fire) {
+			addBody(fire, 'fire', fireAnimations[fire.firevar], function(e) {
+				$(e).remove();
 			});
-			_.each(game.bombs, function(bomb) {
-				animateBody(bomb);
-			});
-			_.each(fires, function(fire) {
-				animateBody(fire);
-                if (lastAnimation(fire)) {
-					fires = _.without(fires, fire);
-					fire.$img.remove();
-				}
-			});
-			_.each(firebricks, function(firebrick) {
-				animateBody(firebrick);
-                if (lastAnimation(firebrick)) {
-					firebricks = _.without(firebricks, firebrick);
-					firebrick.$img.remove();
-                    gameHandler.removeBody(firebrick);
-                }
-			});
-			if (++frame === 20) {
-				visualTime = new Date().getTime() - visualTime;
-				$fpsLabel.text('Total time: ' + time + '. Engine time: ' + gameTime + '. Drawing time: ' + visualTime + ' . fps: ' + fps);
-				frame = 0;
+		});
+		_.each(data.bodies, function(body) {
+			if (body instanceof Box) {
+                console.log(body.name);
+                $('#' + body.name).remove();
+				addBody(body, 'firebrick', fireBrick, function(e) {
+                    gameHandler.removeBody(body);
+					$(e).remove();
+				});
 			}
 		});
-
-		gameHandler.addListener('explodeBomb', function(bomb, data) {
-			_.each(data.bombs, function(b) {
-				b.$img.remove();
-			});
-			_.each(data.fires, function(fire) {
-				var os = 0,
-				f = fire.firevar;
-				switch (f) {
-				case 'l':
-					os = 2;
-					break;
-				case 'r':
-					os = 3;
-					break;
-				case 'u':
-					os = 4;
-					break;
-				case 'd':
-					os = 1;
-					break;
-				case 'h':
-					os = 5;
-					break;
-				case 'v':
-					os = 6;
-					break;
-				}
-				addBody(fire, 'fires');
-				fire.direction = null;
-				fire.sprites = [0, 1, 2, 3];
-				fire.offsetSprite = os;
-				fire.animate = 5;
-				fires.push(fire);
-
-			});
-			_.each(data.bodies, function(body) {
-				if (body instanceof Box) {
-					body.animate = 5;
-					body.sprite = 0;
-					body.offsetSprite = 1;
-					body.sprites = [1, 2];
-					body.animateTimer = 10;
-					firebricks.push(body);
-				} else if (body instanceof Bomb) {
-					body.$img.remove();
-				}
-			});
-		});
 	});
-
-	gameHandler.addListener('addPlayer', function(player) {
-		addPlayer(player);
-	});
-
-	gameHandler.addListener('placeBomb', function(bomb) {
-		placeBomb(bomb);
-	});
-
-	gameHandler.addListener('meDead', function(player) {
-		player.$img.remove();
-	});
-
-	gameHandler.addListener('playerDead', function(player) {
-		player.$img.remove();
-	});
-
-	gameHandler.addListener('resurectPlayer', function(player) {
-		$gamePanel.append(player.$img);
-	});
-
-	var addBody = function(body, image) {
-		var $img = $('<div>').css('background', 'url(images/' + image + '.png)').css('left', body.x).css('top', body.y).addClass('body');
-		body.$img = $img;
-		body.sprite = 0;
-		body.offsetSprite = 0;
-		body.animate = 0;
-		body.animateCount = 0;
-		body.sprites = [0];
-		body.animateTimer = 5;
-		setBackgroundPosition(body);
-		$gamePanel.append($img);
-		return $img;
-	};
-
-	var addPlayer = function(player) {
-		addBody(player, 'players').addClass('player');
-		player.sprites = [0, 1, 0, 2];
-	};
 
 	var placeBomb = function(bomb) {
-		addBody(bomb, 'objects');
-		bomb.sprites = [0, 1, 2];
-		bomb.animate = 5;
-		bomb.offsetSprite = 2;
-	};
-
-	var animateBody = function(b) {
-		if (b.direction !== null && b.speed > 0) {
-			b.$img.css('left', b.x).css('top', b.y - 4);
-		}
-		if (b.animate > 0) {
-			if (b.lastDirection !== b.direction) {
-				b.animate = 0;
-				b.lastDirection = b.direction;
-			}
-			if (--b.animate <= 0) {
-				b.animate = b.animateTimer;
-				if (++b.sprite >= b.sprites.length) {
-					b.sprite = 0;
-				}
-				var y = 0;
-				if (b.direction !== null) {
-					if (b.direction.cos !== 0) {
-						y = b.direction.cos > 0 ? 3: 2;
-					} else if (b.direction.sin !== 0) {
-						y = b.direction.sin > 0 ? 0: 1;
-					}
-				}
-				setBackgroundPosition(b, y);
-			}
-		}
-	};
-
-	var setBackgroundPosition = function(body, y) {
-		if (arguments.length === 1) {
-			y = 0;
-		}
-		body.$img.css('background-position', ( - (18 * (y + body.offsetSprite))) + 'px ' + ( - (22 * body.sprites[body.sprite])) + 'px');
-	};
-
-	var lastAnimation = function(body) {
-		return (body.sprite === body.sprites.length - 1 && body.animate === 1);
+		var name = 'bomb-' + ++count;
+		$('#background').addSprite(name, {
+			animation: bombAnimation,
+			width: 16,
+			height: 16,
+			posx: bomb.x,
+			posy: bomb.y
+		});
+		bomb.name = name;
 	};
 };
 

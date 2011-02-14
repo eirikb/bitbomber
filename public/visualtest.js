@@ -41,7 +41,7 @@ $(function() {
 	gameHandler = new GameHandler(lobbyHandler, dummyClient),
 	gamePanel = new GamePanel(gameHandler);
 
-	var game = new Game(640, 480).createBlocks(16).createBricks(16, 20);
+	var game = new Game(640, 480).createBlocks(16).createBricks(16, 50);
 	game.addBody(new Player(0, 0, 16, 16, "test-1"), true);
 	gameHandler.startGame(game, "test-1");
 });

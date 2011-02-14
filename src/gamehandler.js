@@ -1,5 +1,5 @@
 GameHandler = function(lobbyHandler, socketClient) {
-	var game, player, factorialTimer;
+	var game, player;
 	listeners = {};
 
 	this.addListener = function(trigger, fn) {
@@ -16,6 +16,7 @@ GameHandler = function(lobbyHandler, socketClient) {
 	this.startGame = function(newGame, nick) {
 		game = newGame;
 		player = game.getPlayer(nick);
+        /*
 		factorialTimer = new FactorialTimer();
         var time = new Date().getTime(), fps, gameTime;
         var frames = 0;
@@ -30,10 +31,15 @@ GameHandler = function(lobbyHandler, socketClient) {
 			});
             time = new Date().getTime();
 		});
+        */
 		_.each(listeners.startGame, function(callback) {
 			callback(game);
 		});
 	};
+
+    this.step = function() {
+        game.world.step();
+    };
 
 	this.startMove = function(cos, sin) {
 		if (!player.dead) {

@@ -1,2 +1,0 @@
-## Blasting Bob  - client
-

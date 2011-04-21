@@ -68,9 +68,10 @@ GameHandler = function(lobbyHandler, socketClient) {
 			if (player.bombs > 0) {
 				//player.bombs--;
 				var bomb = new Bomb(Math.floor((player.x + 8) / 16) * 16, Math.floor((player.y + 8) / 16) * 16, 16, 16);
-                bomb.size = 2;
-				game.addBody(bomb);
+                bomb.size = 10;
 				bomb.power = player.power;
+                bomb.power = 1;
+				game.addBody(bomb);
 				socketClient.send('placeBomb', {
 					x: bomb.x,
 					y: bomb.y
@@ -80,6 +81,7 @@ GameHandler = function(lobbyHandler, socketClient) {
 		}
 	};
 
+    /*
 	socketClient.addListener('joinGame', function(result, data) {
 		p = Player.deserialize(data.player);
 		game.addBody(p, true);
@@ -156,5 +158,6 @@ GameHandler = function(lobbyHandler, socketClient) {
 			callback(p);
 		});
 	});
+    */
 };
 

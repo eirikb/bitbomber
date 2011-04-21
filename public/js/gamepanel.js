@@ -18,7 +18,7 @@ GamePanel = function(gameHandler) {
 		});
 	},
 	addBody = function(body, name, animation, cb) {
-        name += '-' + ++count;
+		name += '-' + ++count;
 		$('#background').addSprite(name, {
 			animation: animation,
 			width: 16,
@@ -27,7 +27,7 @@ GamePanel = function(gameHandler) {
 			posy: body.y,
 			callback: cb
 		});
-        body.name = name;
+		body.name = name;
 	},
 	addBodies = function(bodies, name, animation) {
 		_.each(bodies, function(b) {
@@ -104,6 +104,33 @@ GamePanel = function(gameHandler) {
 			$('#player')[0].player = player;
 		});
 
+		//  WTF ***********************************************************************
+
+		var wtf = function(icon, link, sx, sy) {
+			var hx = Math.floor(Math.random() * 10) + sy,
+			hy = Math.floor(Math.random() * 10) + sx;
+			_.each(game.world.getBodies(hx * 16, hy * 16, 16, 16), function(body) {
+				game.removeBody(body);
+			});
+			var heart = new Box(hx * 16, hy * 16, 16, 16);
+			game.addBody(heart);
+			heart.onCollision(function() {
+				game.removeBody(heart);
+				$('#' + heart.name).remove();
+                $('#' + link).show().click(function() {
+                    $(this).hide();
+                });
+			});
+			addBody(heart, 'heart', new $.gameQuery.Animation({
+				imageURL: icon
+			}));
+		};
+		wtf('http://www.ibsurvival.com/public/style_emoticons/default/heart-icon.gif', 'link-1', 5, 0);
+		wtf('http://upload.wikimedia.org/wikipedia/commons/3/3f/House_icon.png', 'link-2', 15, 0);
+		wtf('http://www.pixeljoint.com/pixels/images/smile/lol.gif', 'link-3', 15, 15);
+
+		//  WTF ***********************************************************************
+
 		addBodies(game.blocks, 'block', blockSprite);
 		addBodies(game.bricks, 'brick', brickSprite);
 
@@ -160,10 +187,9 @@ GamePanel = function(gameHandler) {
 		});
 		_.each(data.bodies, function(body) {
 			if (body instanceof Box) {
-                console.log(body.name);
-                $('#' + body.name).remove();
+				$('#' + body.name).remove();
 				addBody(body, 'firebrick', fireBrick, function(e) {
-                    gameHandler.removeBody(body);
+					gameHandler.removeBody(body);
 					$(e).remove();
 				});
 			}

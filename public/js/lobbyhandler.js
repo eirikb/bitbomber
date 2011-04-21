@@ -1,7 +1,8 @@
-LobbyHandler = function(gameHandler, httpClient, socketClient) {
-	var user;
+var LobbyHandler = function(socketClient) {
+    this.socketClient = socketClient;
+};
 
-	this.createGame = function(fn) {
+LobbyHandler.prototype.createGame = function(callback) {
 		httpClient.createGame(function(data) {
 			if (data.result === 'OK') {
 				var game = Game.deserialize(data.data);
@@ -13,7 +14,7 @@ LobbyHandler = function(gameHandler, httpClient, socketClient) {
 		});
 	};
 
-	this.playNow = function(fn) {
+	LobbyHandler.prototype.playNow = function(fn) {
 		httpClient.playNow(function(data) {
 			if (data.result === 'OK') {
 				var game = Game.deserialize(data.data);
@@ -26,7 +27,7 @@ LobbyHandler = function(gameHandler, httpClient, socketClient) {
 
 	};
 
-	this.login = function(nick, fn) {
+	LobbyHandler.prototype.login = function(nick, fn) {
 		httpClient.login(nick, function(data) {
 			if (data.result === 'OK') {
 				user = data.data;
@@ -39,5 +40,4 @@ LobbyHandler = function(gameHandler, httpClient, socketClient) {
 			}
 		});
 	};
-};
 

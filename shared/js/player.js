@@ -21,7 +21,7 @@ Player = function(x, y, width, height, nick) {
     this.power = 1;
 };
 
-Player.prototype = Object.construct_prototype(OGE.Body);
+Player.prototype = new OGE.Body();
 
 Player.prototype.serialize = function() {
 	return {

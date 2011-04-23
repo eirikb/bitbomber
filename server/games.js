@@ -42,14 +42,14 @@ exports.joinGame = function(cmd, player) {
 		var x = 0,
 		y = 0;
 		switch (g.players.length) {
-		case 1:
-		case 3:
-			x = g.world.width - player.width;
-			break;
-		case 2:
-		case 3:
-			y = g.world.height - player.height;
-			break;
+			case 1:
+			case 3:
+				x = g.world.width - player.width;
+				break;
+			case 2:
+			case 3:
+				y = g.world.height - player.height;
+				break;
 		}
 		player.x = x;
 		player.y = y;

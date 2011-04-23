@@ -1,27 +1,25 @@
-var $infoArea;
-var utils = {};
-utils.log = function(cmd, msg) {
-	if (arguments.length === 1) {
-		msg = cmd;
-		cmd = msg.cmd;
-	}
+var $infoArea,
+utils = {},
+version = 0.3;
+
+utils.log = function() {
 	if (typeof console !== 'undefined' && console !== null) {
-		console.log(cmd, msg);
+		console.log(arguments);
 	}
-	msg = cmd + ' - ' + msg.result;
+	var msg = '';
+	for (var i = 0; i < arguments.length; i++) {
+		msg += arguments[i] + ' ';
+	}
 	$infoArea.val($infoArea.val() + ($infoArea.val().length > 0 ? '\n': '') + msg);
 	$infoArea.attr('scrollTop', $infoArea.attr('scrollHeight'));
 };
 
 $(function() {
-	var version = 0.2;
-
 	$infoArea = $('#infoArea');
-    var client = new io.Socket();
+	utils.log('Versions: OGE: ' + OGE.version + '. Game: ' + Game.version + '. Client: ' + version);
+
+	var client = new io.Socket();
 	gameHandler = new GameHandler(client),
-	gamePanel = new GamePanel(gameHandler),
-    lobbyHandler = new LobbyHandler(client),
-	lobbyPanel = new LobbyPanel(lobbyHandler);
-	utils.log({cmd: 'versions', result: 'OGE: ' + OGE.version + '. Game: ' + Game.version + '. Client: ' + version});
+	lobbyHandler = new LobbyHandler(client);
 });
 

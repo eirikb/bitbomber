@@ -1,35 +1,29 @@
-var bitbomber = require('bitbomber');
+var bitbomber = require('bitbomber'),
+players = {};
 
-var loginPlayer = function(guid, nick, player) {
-	if (!c.isSet(guid)) {
-		if (c.isSet(nick) && ! c.isSet(b.playerNicks[nick])) {
-			var player = new Player(0, 0, 16, 16, nick);
-			b.playerNicks[player.nick] = player;
-			var guid = c.guid();
-			player.guid = guid;
-			b.playerGuids[guid] = player;
-			logPlayer(guid, 'created');
-			return c.success({
-				nick: player.nick,
-				guid: guid
-			});
-		} else {
-			return c.error(2, 'NICK ALREADY IN USE');
-		}
-	} else {
-		if (c.isSet(player)) {
-			logPlayer(guid, 'reloaded');
-			return c.success(player);
-		} else {
-			return c.error(1, 'UNKOWN PLAYER');
-		}
+require('bitbomber')
+
+var register = function(client, privateGuid) {
+	var player = players[privateGuid];
+	if (!player) {
+		player = new Player(0, 0, 16, 16);
+		privateGuid = guid();
+		player.privateGuid = privateGuid;
+		players[privateGuid] = player;
 	}
+	player.publicGuid = guid();
+	client.send({
+		cmd: 'register', 
+		player: player
+	});
 };
 
 exports.logoutPlayer = function(player) {
+	/*
 	if (c.isSet(b.playerNicks[player.nick])) {
 		logoutPlayer(player);
 	}
+	*/
 };
 
 exports.authPlayer = function(cmd, client, guid) {
@@ -59,22 +53,33 @@ var logoutPlayer = function(player) {
 	}
 };
 
+var s4 = function() {
+	return (((1 + Math.random()) * 0x10000) | 0).toString(16).substring(1);
+};
+
+var guid = function() {
+	return s4() + s4();
+};
+
 exports.init = function(socket) {
 	socket.on('connection', function(client) {
 		client.on('message', function(msg) {
-            var player = getPlayer(client);
-            switch (msg.cmd) {
-		case 'authPlayer':
-			players.authPlayer(cmd, client, msg.data.guid);
-			break;
-		}
+			switch (msg.cmd) {
+				case 'register':
+					if (!client.player) {
+						register(client, msg.privateGuid);
+					} else {
+						console.log('already registered');
+					}
+					break;
+				case 'setNick':
+					players.authPlayer(cmd, client, msg.data.guid);
+					break;
+			}
 		});
-		client.on('disconnect', function() {
-            var player = getPlayer(client);
-            if (player !== null) {
-                logoutPlayer(player);
-            }
-		});
+	});
+	socket.on('disconnect', function(client) {
+		console.log(client);
 	});
 };
 

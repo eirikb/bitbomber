@@ -142,33 +142,38 @@ Game.prototype.addBody = function(body, active) {
 };
 
 Game.prototype.serialize = function() {
-	var self = this;
-	var data = {
+	var self = this,
+	data = {
 		width: this.world.width,
 		height: this.world.height,
 		guid: this.guid
-	};
-	var serializeboxes = function(name, attrs) {
+	},
+	serializeboxes = function(name, attrs) {
+		var i, j, size, box, pos, attr;
 		if (self[name].length > 0) {
-			var size = self[name][0].width;
+			size = self[name][0].width;
 			data[name] = {};
 			data[name].size = size;
 			data[name].pos = [];
 			data[name].attrs = {};
-			_.each(self[name], function(box) {
-				var pos = box.y / size * Math.floor(self.world.width / size) + box.x / size;
+			for (i = 0; i < self[name].length; i++) {
+				box = self[name][i];
+				pos = box.y / size * Math.floor(self.world.width / size) + box.x / size;
 				data[name].pos.push(pos);
-				_.each(attrs, function(attr) {
-					data[name].attrs[attr] = box[attr];
-				});
-			});
+				if (attrs) {
+					for (j = 0; j < attrs.length; j++) {
+						attr = attrs[i];
+						data[name].attrs[attr] = box[attr];
+					}
+				}
+			}
 		}
-	};
+	}, i;
 	if (this.players.length > 0) {
 		data.players = [];
-		_.each(this.players, function(player) {
-			data.players.push(player.serialize());
-		});
+		for (i = 0; i < self.players.length; i++) {
+			data.players.push(self.players[i].serialize());
+		}
 	}
 
 	serializeboxes('blocks', ['armor']);
@@ -177,11 +182,16 @@ Game.prototype.serialize = function() {
 };
 
 Game.prototype.removeBody = function(body) {
+	var i;
 	this.world.removeBody(body);
-	this.players = _.without(this.players, body);
-	this.bombs = _.without(this.bombs, body);
-	this.blocks = _.without(this.blocks, body);
-	this.bricks = _.without(this.bricks, body);
+	i = this.players.indexOf(body);
+	i >= 0 && this.players.splice(i, 1);
+	i = this.bombs.indexOf(body);
+	i >= 0 && this.bombs.splice(i, 1);
+	i = this.blocks.indexOf(body);
+	i >= 0 && this.blocks.splice(i, 1);
+	i = this.bricks.indexOf(body);
+	i >= 0 && this.bricks.splice(i, 1);
 };
 
 Game.prototype.getPlayer = function(nick) {
@@ -221,30 +231,38 @@ Game.prototype.createBricks = function(size, percentage) {
 	return this;
 };
 
-Game.deserialize = function(data) {
-	var game = new Game(data.width, data.height);
-	var deserializeBoxes = function(name) {
-		if (data[name].pos.length > 0) {
-			var size = data[name].size;
-			var boxPrY = Math.floor(data.width / size);
-			_.each(data[name].pos, function(pos) {
-				var x = pos % boxPrY * size;
-				var y = Math.floor(pos / boxPrY) * size;
-				var box = new Box(x, y, size, size);
-				_.each(data[name].attrs, function(i, attr) {
+Game.deserialize = function(data, player) {
+	var game = new Game(data.width, data.height),
+	i, j, attr, size, boxPrY, pos, x, y, box, p,
+	deserializeBoxes = function(name) {
+		if (data[name] && data[name].pos && data[name].pos.length > 0) {
+			size = data[name].size;
+			boxPrY = Math.floor(data.width / size);
+			for (i = 0; i < data[name].pos.length; i++) {
+				pos = data[name].pos[i];
+				x = pos % boxPrY * size;
+				y = Math.floor(pos / boxPrY) * size;
+				box = new Box(x, y, size, size);
+				for (j = 0; j < data[name].attrs.length; j++) {
+					attr = data[name].attrs[j];
 					box[attr] = data[name].attrs[attr];
-				});
+				}
 				game[name].push(box);
 				game.addBody(box);
-			});
+			}
 		}
 	};
 	deserializeBoxes('blocks');
 	deserializeBoxes('bricks');
 	if (data.players && data.players.length > 0) {
-		_.each(data.players, function(p) {
-			game.addBody(Player.deserialize(p), true);
-		});
+		for (i = 0; i < data.players.length; i++) {
+			p = data.players[i];
+			if (player && player.publicGuid === p.publicGuid) {
+				game.addBody(player, true);
+			} else {
+				game.addBody(Player.deserialize(p), true);
+			}
+		}
 	}
 	game.guid = data.guid;
 	return game;

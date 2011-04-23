@@ -18,7 +18,7 @@ Player = function(x, y, width, height, nick) {
 	this.life = 3;
 	this.armor = 0;
 	this.bombs = 1;
-    this.power = 1;
+	this.power = 1;
 };
 
 Player.prototype = new OGE.Body();
@@ -31,11 +31,16 @@ Player.prototype.serialize = function() {
 		width: this.width,
 		height: this.height,
 		speed: this.speed,
-		armor: this.armor
+		armor: this.armor,
+		publicGuid: this.publicGuid
 	};
 };
 
 Player.deserialize = function(data) {
-	return _.extend(new Player(data.x, data.y, data.width, data.height, data.nick), data);
+	var player = new Player(data.x, data.y, data.width, data.height, data.nick);
+	for (attr in data) {
+		player[attr] = data[attr];
+	}
+	return player;
 };
 

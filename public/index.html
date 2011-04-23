@@ -6,18 +6,16 @@
         <link rel="stylesheet" type="text/css" href="bitbomber.css">
         <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"></script>
         <script type="text/javascript" src="http://cdn.socket.io/stable/socket.io.js"></script>
-        <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"></script>
         <script type="text/javascript" src="http://gamequery.onaluf.org/download/jquery.gamequery-0.5.1.js"></script>
         <script type="text/javascript" src="js/gamehandler.js"></script>
         <script type="text/javascript" src="js/gamepanel.js"></script>
         <script type="text/javascript" src="js/keyboardhandler.js"></script>
-        <script type="text/javascript" src="js/factorialtimer.js"></script>
-        <script type="text/javascript" src="js/httpclient.js"></script>
-        <script type="text/javascript" src="js/socketclient.js"></script>
         <script type="text/javascript" src="js/lobbyhandler.js"></script>
         <script type="text/javascript" src="js/oge.min.js"></script>
         <script type="text/javascript" src="js/game.js"></script>
-        <script type="text/javascript" src="js/lobbypanel.js"></script>
+        <script type="text/javascript" src="js/box.js"></script>
+        <script type="text/javascript" src="js/player.js"></script>
+        <script type="text/javascript" src="js/bomb.js"></script>
         <script type="text/javascript" src="js/onload.js"></script>
     </head>
     <body>
@@ -29,8 +27,10 @@
                 <button id="loginButton">OK</button>
             </div>
             <div id="lobbyPanel">
+                <img src="images/logo.png">
+				<br>
                 <button id="playNowButton">Play now!</button>
-                <button id="createGameButton">Create game</button>
+                <button id="createGameButton">Create private game</button>
             </div>
             <div id="gamePanel">
             </div>

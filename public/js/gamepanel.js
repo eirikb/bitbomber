@@ -1,7 +1,6 @@
 GamePanel = function(gameHandler) {
 	var $gamePanel = $('#gamePanel'),
 	REFRESH_RATE = 30,
-	keyboardHandler,
 	lastDir,
 	count = 0,
 	playerAnimations = [],
@@ -30,8 +29,8 @@ GamePanel = function(gameHandler) {
 		body.name = name;
 	},
 	addBodies = function(bodies, name, animation) {
-		_.each(bodies, function(b) {
-			addBody(b, name, animation);
+		$(bodies).each(function(i, body) {
+			addBody(body, name, animation);
 		});
 	},
 	blockSprite = new $.gameQuery.Animation({
@@ -47,7 +46,7 @@ GamePanel = function(gameHandler) {
 		delta: 22,
 		rate: 120,
 		offsetx: 2 * 18,
-		type: $.gameQuery.ANIMATION_VERTICAL,
+		type: $.gameQuery.ANIMATION_VERTICAL
 	}),
 	fireAnimation = function(spriteX) {
 		return new $.gameQuery.Animation({
@@ -86,14 +85,13 @@ GamePanel = function(gameHandler) {
 	fireAnimations['h'] = fireAnimation(5);
 	fireAnimations['v'] = fireAnimation(6);
 
-	gameHandler.addListener('startGame', function(game) {
-		keyboardHandler = new KeyboardHandler();
+	this.startGame = function(game) {
 		$gamePanel.playground({
 			width: game.world.width,
 			height: game.world.height,
 			refreshRate: REFRESH_RATE
 		}).addGroup('players').addGroup('background');
-		_.each(game.players, function(player) {
+		$(game.players).each(function(i, player) {
 			$('#players').addSprite("player", {
 				animation: playerAnimations['down-idle'],
 				width: 18,
@@ -104,79 +102,19 @@ GamePanel = function(gameHandler) {
 			$('#player')[0].player = player;
 		});
 
-		//  WTF ***********************************************************************
-
-		var wtf = function(icon, link, sx, sy) {
-			var hx = Math.floor(Math.random() * 10) + sy,
-			hy = Math.floor(Math.random() * 10) + sx;
-			_.each(game.world.getBodies(hx * 16, hy * 16, 16, 16), function(body) {
-				game.removeBody(body);
-			});
-			var heart = new Box(hx * 16, hy * 16, 16, 16);
-			game.addBody(heart);
-			heart.onCollision(function() {
-				game.removeBody(heart);
-				$('#' + heart.name).remove();
-                $('#' + link).show().click(function() {
-                    $(this).hide();
-                });
-			});
-			addBody(heart, 'heart', new $.gameQuery.Animation({
-				imageURL: icon
-			}));
-		};
-		wtf('http://www.ibsurvival.com/public/style_emoticons/default/heart-icon.gif', 'link-1', 5, 0);
-		wtf('http://upload.wikimedia.org/wikipedia/commons/3/3f/House_icon.png', 'link-2', 15, 0);
-		wtf('http://www.pixeljoint.com/pixels/images/smile/lol.gif', 'link-3', 15, 15);
-
-		//  WTF ***********************************************************************
-
 		addBodies(game.blocks, 'block', blockSprite);
 		addBodies(game.bricks, 'brick', brickSprite);
 
-		$.playground().startGame(function() {}).registerCallback(function() {
+		$.playground().startGame().registerCallback(function() {
 			$('#player').each(function() {
 				$(this).css('left', this.player.x).css('top', this.player.y - 6);
 			});
 			gameHandler.step();
 		},
 		REFRESH_RATE);
+	};
 
-		keyboardHandler.keydown(function(dir) {
-			var cos = 0,
-			sin = 0;
-			switch (dir) {
-			case 'space':
-				var bomb = gameHandler.placeBomb();
-				if ( !! bomb) {
-					placeBomb(bomb);
-				}
-				break;
-			case 'left':
-				cos = - 1;
-				break;
-			case 'up':
-				sin = - 1;
-				break;
-			case 'right':
-				cos = 1;
-				break;
-			case 'down':
-				sin = 1;
-				break;
-			}
-			if (cos !== 0 || sin !== 0) {
-				gameHandler.startMove(cos, sin);
-				$('#player').setAnimation(playerAnimations[dir]);
-				lastDir = dir;
-			}
-		}).keyup(function(e) {
-			gameHandler.endMove();
-			$('#player').setAnimation(playerAnimations[lastDir + '-idle']);
-		});
-	});
-
-	gameHandler.addListener('explodeBomb', function(bomb, data) {
+	this.explodeBomb = function(bomb, data) {
 		_.each(data.bombs, function(b) {
 			$('#' + b.name).remove();
 		});
@@ -194,7 +132,16 @@ GamePanel = function(gameHandler) {
 				});
 			}
 		});
-	});
+	};
+
+	this.startMove = function(dir) {
+		$('#player').setAnimation(playerAnimations[dir]);
+		lastDir = dir;
+	};
+
+	this.endMove = function() {
+		$('#player').setAnimation(playerAnimations[lastDir + '-idle']);
+	};
 
 	var placeBomb = function(bomb) {
 		var name = 'bomb-' + ++count;

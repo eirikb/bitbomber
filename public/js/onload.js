@@ -1,6 +1,9 @@
 var $infoArea,
 utils = {},
-version = 0.3;
+bitbomber = {
+	version: 0.3,
+	player: {}
+};
 
 utils.log = function() {
 	if (typeof console !== 'undefined' && console !== null) {
@@ -16,10 +19,9 @@ utils.log = function() {
 
 $(function() {
 	$infoArea = $('#infoArea');
-	utils.log('Versions: OGE: ' + OGE.version + '. Game: ' + Game.version + '. Client: ' + version);
+	utils.log('Versions: OGE: ' + OGE.version + '. Game: ' + Game.version + '. Client: ' + bitbomber.version);
 
 	var client = new io.Socket();
 	gameHandler = new GameHandler(client),
 	lobbyHandler = new LobbyHandler(client);
 });
-

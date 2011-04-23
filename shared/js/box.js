@@ -9,5 +9,5 @@ Box = function(x, y, width, height) {
 	this.armor = 1;
 };
 
-Box.prototype = Object.construct_prototype(OGE.Body);
+Box.prototype = new OGE.Body();
 

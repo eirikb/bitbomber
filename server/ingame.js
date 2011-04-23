@@ -1,7 +1,5 @@
-var c = require('commons'),
-b = require('bitbomber');
-
-var bombs = [];
+var bitbomber = require('bitbomber'),
+bombs = [];
 
 exports.startBombTimer = function() {
 	function checkBombs() {

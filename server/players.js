@@ -1,7 +1,4 @@
-var bitbomber = require('bitbomber'),
-players = {};
-
-require('bitbomber')
+var players = {};
 
 var register = function(client, privateGuid) {
 	var player = players[privateGuid];
@@ -12,53 +9,17 @@ var register = function(client, privateGuid) {
 		players[privateGuid] = player;
 	}
 	player.publicGuid = guid();
+	client.player = player;
+	player.client = client;
+	var playerData = player.serialize();
+	playerData.privateGuid = player.privateGuid;
 	client.send({
 		cmd: 'register', 
-		player: player
+		player: playerData
 	});
 };
 
-exports.logoutPlayer = function(player) {
-	/*
-	if (c.isSet(b.playerNicks[player.nick])) {
-		logoutPlayer(player);
-	}
-	*/
-};
-
-exports.authPlayer = function(cmd, client, guid) {
-	var player = b.playerGuids[guid];
-	if (c.isSet(player)) {
-		b.playerClients[player.nick] = client;
-		b.sessionPlayers[client.sessionId] = player;
-		client.send(c.success(cmd, {
-			nick: player.nick,
-			guid: guid
-		}));
-	} else {
-		client.send(c.error(cmd, 0, 'UNKOWN GUID'));
-	}
-
-};
-
-var logoutPlayer = function(player) {
-	if (c.isSet(player)) {
-		logPlayer(player.guid, 'logged out');
-		gamehandler.playerLogout(player);
-		delete b.playerNicks[player.nick];
-		delete b.playerGuids[player.guid];
-		return c.success();
-	} else {
-		return c.error(0, 'UNKOWN PLAYER');
-	}
-};
-
-var s4 = function() {
-	return (((1 + Math.random()) * 0x10000) | 0).toString(16).substring(1);
-};
-
-var guid = function() {
-	return s4() + s4();
+var logout = function() {
 };
 
 exports.init = function(socket) {
@@ -72,14 +33,14 @@ exports.init = function(socket) {
 						console.log('already registered');
 					}
 					break;
-				case 'setNick':
-					players.authPlayer(cmd, client, msg.data.guid);
+				case 'login':
+					client.player.nick = msg.nick;
 					break;
 			}
 		});
 	});
 	socket.on('disconnect', function(client) {
-		console.log(client);
+		logout(client);
 	});
 };
 

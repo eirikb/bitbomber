@@ -11,5 +11,5 @@ Bomb = function(x, y, width, height) {
 	this.power = 1;
 };
 
-Bomb.prototype = Object.construct_prototype(OGE.Body);
+Bomb.prototype = new OGE.Body();
 

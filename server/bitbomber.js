@@ -3,16 +3,17 @@ require.paths.unshift(__dirname);
 var http = require('http'),
 nodeStatic = require('node-static'),
 url = require('url'),
-players = require('players.js'),
-games = require('games.js'),
+players = require('players'),
+games = require('games'),
+ingame = require('ingame'),
 socketio = require('socket.io'),
 port = 8000;
 
-global.OGE = require('../shared/js/oge.min.js');
-require('../shared/js/player.js');
-require('../shared/js/game.js');
-require('../shared/js/box.js');
-require('../shared/js/bomb.js');
+global.OGE = require('../shared/js/oge.min');
+require('../shared/js/player');
+require('../shared/js/game');
+require('../shared/js/box');
+require('../shared/js/bomb');
 
 var server = http.createServer(function(req, res) {
 	var publicFiles = new nodeStatic.Server('../public', {
@@ -40,6 +41,7 @@ global.guid = function() {
 
 players.init(socket);
 games.init(socket);
+ingame.init(socket);
 
 server.listen(port);
 console.log('Server running at ' + port);

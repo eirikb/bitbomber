@@ -36,8 +36,10 @@ Player.prototype.serialize = function() {
 	};
 };
 
-Player.deserialize = function(data) {
-	var player = new Player(data.x, data.y, data.width, data.height, data.nick);
+Player.deserialize = function(data, player) {
+	if (!player) {
+		player = new Player(data.x, data.y, data.width, data.height, data.nick);
+	}
 	for (attr in data) {
 		player[attr] = data[attr];
 	}

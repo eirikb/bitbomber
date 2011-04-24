@@ -4,7 +4,7 @@
  * @constructur
  * @return {Powerup}
  */
-Powerup = function(x, y, width, height) {
+Powerup = function() {
 	OGE.Body.apply(this, arguments);
 };
 

@@ -15,7 +15,7 @@ Game = function(width, height) {
 	this.maxPlayers = 4;
 };
 
-Game.version = 0.7;
+Game.version = 0.8;
 
 Game.prototype.getBomb = function(x, y) {
 	for (var i = 0; i < this.bombs.length; i++) {
@@ -194,12 +194,13 @@ Game.prototype.removeBody = function(body) {
 	i >= 0 && this.bricks.splice(i, 1);
 };
 
-Game.prototype.getPlayer = function(nick) {
+Game.prototype.getPlayer = function(publicGuid) {
 	for (var i = 0; i < this.players.length; i++) {
-		if (this.players[i].nick === nick) {
+		if (this.players[i].publicGuid === publicGuid) {
 			return this.players[i];
 		}
 	}
+	return null;
 };
 
 Game.prototype.createBlocks = function(size) {
@@ -258,7 +259,7 @@ Game.deserialize = function(data, player) {
 		for (i = 0; i < data.players.length; i++) {
 			p = data.players[i];
 			if (player && player.publicGuid === p.publicGuid) {
-				game.addBody(player, true);
+				game.addBody(Player.deserialize(p, player), true);
 			} else {
 				game.addBody(Player.deserialize(p), true);
 			}

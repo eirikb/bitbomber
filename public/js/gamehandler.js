@@ -5,39 +5,44 @@ GameHandler = function(client) {
 	$gamePanel = $('#gamePanel'),
 	keyboardHandler = new KeyboardHandler();
 
-	function joinGame(gameData) {
+	function game(gameData) {
 		var player = bitbomber.player;
 		game = Game.deserialize(gameData, player);
-		utils.log(game.players.length);
+		utils.log(game.players);
 		$gamePanel.show();
 		$lobbyPanel.hide();
 		gamePanel.startGame(game);
 		keyboardHandler.init();
 	}
 
-	function startMove(cos, sin) {
-		var player = bitbomber.player;
-		if (!player.dead) {
-			player.direction = new OGE.Direction(cos, sin);
-			client.send('startMove', {
-				cos: cos,
-				sin: sin,
-				x: player.x,
-				y: player.y
-			});
-		}
-	};
+	function joinGame(playerData) {
+		var player = Player.deserialize(playerData);
+		game.addBody(player, true);
+		gamePanel.addPlayer(player);
+	}
 
-	function endMove() {
-		var player = bitbomber.player;
-		if (!player.dead) {
-			player.direction = null;
-			client.send('endMove', {
-				x: player.x,
-				y: player.y
-			});
+	function leaveGame(publicGuid) {
+		var player = game.getPlayer(publicGuid);
+		if (player !== null) {
+			gamePanel.removePlayer(player);
+			game.removeBody(player);
 		}
-	};
+	}
+
+	function startEndMove(data) {
+		var player = game.getPlayer(data.publicGuid),
+		cos = parseInt(data.cos),
+		sin = parseInt(data.sin);
+		if (!isNaN(cos) && !isNaN(sin)) {
+			player.direction = new OGE.Direction(parseInt(data.cos, 10), parseInt(data.sin, 10));
+			gamePanel.startMove(player, data.dir);
+		} else {
+			player.direction = null;
+			gamePanel.endMove(player);
+		}
+		player.x = parseInt(data.x, 10);
+		player.y = parseInt(data.y, 10);
+	}
 
 	this.step = function() {
 		game.world.step();
@@ -67,111 +72,46 @@ GameHandler = function(client) {
 				break;
 		}
 		if (cos !== 0 || sin !== 0) {
-			startMove(cos, sin);
-			gamePanel.startMove(dir);
+			var player = bitbomber.player,
+			data = {
+				cmd: 'startMove',
+				dir: dir,
+				cos: cos, 
+				sin: sin, 
+				x: player.x, 
+				y: player.y
+			};
+			client.send(data);
+			data.publicGuid = player.publicGuid;
+			startEndMove(data);
 		}
 	}).keyup(function(e) {
-		endMove();
-		gamePanel.endMove();
+		var player = bitbomber.player,
+		data = {
+			cmd: 'endMove',
+			x: player.x, 
+			y: player.y
+		};
+		client.send(data);
+		data.publicGuid = player.publicGuid;
+		startEndMove(data);
 	});
 
 	client.on('message', function(msg) {
 		switch (msg.cmd) {
+			case 'game':
+				game(msg.game);
+				break;
+			case 'startMove':
+			case 'endMove':
+				startEndMove(msg);
+				break;
 			case 'joinGame':
-				joinGame(msg.game);
+				joinGame(msg.player);
+				break;
+			case 'leaveGame':
+				leaveGame(msg.publicGuid);
 				break;
 		}
 	});
 };
-/*
-
-	this.placeBomb = function() {
-		if (!player.dead) {
-			if (player.bombs > 0) {
-				//player.bombs--;
-				var bomb = new Bomb(Math.floor((player.x + 8) / 16) * 16, Math.floor((player.y + 8) / 16) * 16, 16, 16);
-				bomb.size = 10;
-				bomb.power = player.power;
-				bomb.power = 1;
-				game.addBody(bomb);
-				socketClient.send('placeBomb', {
-					x: bomb.x,
-					y: bomb.y
-				});
-				return bomb;
-			}
-		}
-	};
-
-	socketClient.addListener('joinGame', function(result, data) {
-	});
-
-	socketClient.addListener('startMove', function(result, data) {
-		p = game.getPlayer(data.player);
-		p.direction = new OGE.Direction(data.cos, data.sin);
-		p.x = data.x;
-		p.y = data.y;
-	});
-
-	socketClient.addListener('endMove', function(result, data) {
-		p = game.getPlayer(data.player);
-		p.direction = null;
-		p.x = data.x;
-		p.y = data.y;
-	});
-
-	socketClient.addListener('logoutPlayer', function(result, data) {
-		p = game.getPlayer(data.player);
-		p.$img.remove();
-		game.removeBody(p);
-	});
-
-	socketClient.addListener('placeBomb', function(result, data) {
-		var bomb = new Bomb(data.x, data.y, 16, 16);
-		game.addBody(bomb);
-		_.each(listeners.placeBomb, function(callback) {
-			callback(bomb);
-		});
-	});
-
-	socketClient.addListener('explodeBomb', function(result, data) {
-		var bomb = game.getBomb(data.x, data.y);
-		game.getPlayer(data.player).bombs++;
-		if (bomb !== null) {
-			var eData = game.explodeBomb(bomb);
-            game.removeBodies(eData.bombs, Bomb);
-			if (_.include(eData.bodies, player)) {
-				//player.dead = true;
-				//game.removeBody(player);
-				//_.each(listeners.meDead, function(callback) {
-				//	callback(player);
-				//});
-                player.x = 0;
-                player.y = 0;
-				socketClient.send('playerDead', {});
-			}
-			_.each(listeners.explodeBomb, function(callback) {
-				callback(bomb, eData);
-			});
-		}
-	});
-
-	socketClient.addListener('playerDead', function(result, data) {
-		var p = game.getPlayer(data.player);
-		//game.removeBody(p);
-        p.x = 0;
-        p.y = 0;
-		_.each(listeners.playerDead, function(callback) {
-			//callback(p);
-		});
-	});
-
-	socketClient.addListener('resurectPlayer', function(result, data) {
-		var p = game.getPlayer(data.player);
-		game.addBody(p);
-		_.each(listeners.resurectPlayer, function(callback) {
-			callback(p);
-		});
-	});
-    */
-

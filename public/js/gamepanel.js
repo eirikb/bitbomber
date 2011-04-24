@@ -1,7 +1,6 @@
 GamePanel = function(gameHandler) {
 	var $gamePanel = $('#gamePanel'),
 	REFRESH_RATE = 30,
-	lastDir,
 	count = 0,
 	playerAnimations = [],
 	fireAnimations = [],
@@ -85,28 +84,37 @@ GamePanel = function(gameHandler) {
 	fireAnimations['h'] = fireAnimation(5);
 	fireAnimations['v'] = fireAnimation(6);
 
+	this.addPlayer = function(player) {
+		$('#players').addSprite("player-" + player.publicGuid, {
+			animation: playerAnimations['down-idle'],
+			width: 18,
+			height: 22,
+			posx: player.x,
+			posy: player.y
+		});
+		$('#player-' + player.publicGuid)[0].player = player;
+	};
+
+	this.removePlayer = function(player) {
+		$('#player-' + player.publicGuid).remove();
+	};
+
 	this.startGame = function(game) {
+		var self = this;
 		$gamePanel.playground({
 			width: game.world.width,
 			height: game.world.height,
 			refreshRate: REFRESH_RATE
 		}).addGroup('players').addGroup('background');
 		$(game.players).each(function(i, player) {
-			$('#players').addSprite("player", {
-				animation: playerAnimations['down-idle'],
-				width: 18,
-				height: 22,
-				posx: player.x,
-				posy: player.y
-			});
-			$('#player')[0].player = player;
+			self.addPlayer(player);
 		});
 
 		addBodies(game.blocks, 'block', blockSprite);
 		addBodies(game.bricks, 'brick', brickSprite);
 
 		$.playground().startGame().registerCallback(function() {
-			$('#player').each(function() {
+			$('#players > .sprite').each(function() {
 				$(this).css('left', this.player.x).css('top', this.player.y - 6);
 			});
 			gameHandler.step();
@@ -114,45 +122,13 @@ GamePanel = function(gameHandler) {
 		REFRESH_RATE);
 	};
 
-	this.explodeBomb = function(bomb, data) {
-		_.each(data.bombs, function(b) {
-			$('#' + b.name).remove();
-		});
-		_.each(data.fires, function(fire) {
-			addBody(fire, 'fire', fireAnimations[fire.firevar], function(e) {
-				$(e).remove();
-			});
-		});
-		_.each(data.bodies, function(body) {
-			if (body instanceof Box) {
-				$('#' + body.name).remove();
-				addBody(body, 'firebrick', fireBrick, function(e) {
-					gameHandler.removeBody(body);
-					$(e).remove();
-				});
-			}
-		});
+	this.startMove = function(player, dir) {
+		$('#player-' + player.publicGuid).setAnimation(playerAnimations[dir]);
+		player.lastDir = dir;
 	};
 
-	this.startMove = function(dir) {
-		$('#player').setAnimation(playerAnimations[dir]);
-		lastDir = dir;
-	};
-
-	this.endMove = function() {
-		$('#player').setAnimation(playerAnimations[lastDir + '-idle']);
-	};
-
-	var placeBomb = function(bomb) {
-		var name = 'bomb-' + ++count;
-		$('#background').addSprite(name, {
-			animation: bombAnimation,
-			width: 16,
-			height: 16,
-			posx: bomb.x,
-			posy: bomb.y
-		});
-		bomb.name = name;
+	this.endMove = function(player) {
+		$('#player-' + player.publicGuid).setAnimation(playerAnimations[player.lastDir + '-idle']);
 	};
 };
 

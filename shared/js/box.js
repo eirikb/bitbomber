@@ -4,7 +4,7 @@
  * @constructur
  * @return {Box}
  */
-Box = function(x, y, width, height) {
+Box = function() {
 	OGE.Body.apply(this, arguments);
 	this.armor = 1;
 };

@@ -4,7 +4,7 @@
  * @constructur
  * @return {Fire}
  */
-Fire = function(x, y, width, height) {
+Fire = function() {
 	OGE.Body.apply(this, arguments);
 	this.timer = 10;
 	this.power = 1;

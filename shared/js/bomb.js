@@ -4,7 +4,7 @@
  * @constructur
  * @return {Bomb}
  */
-Bomb = function(x, y, width, height) {
+Bomb = function() {
 	OGE.Body.apply(this, arguments);
 	this.size = 1;
 	this.timer = 4;

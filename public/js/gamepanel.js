@@ -3,13 +3,15 @@ GamePanel = function(gameHandler) {
 	REFRESH_RATE = 30,
 	count = 0,
 	playerAnimations = [],
+	playerTypes = 2,
+	playerColors = 4,
 	fireAnimations = [],
-	playerAnimation = function(direction, numberOfFrame, types, colors) {
+	playerAnimation = function(direction, numberOfFrame) {
 		var animations = [],
 		typeAnimations, color, type;
-		for (type = 0; type < types; type++) {
+		for (type = 0; type < playerTypes; type++) {
 			typeAnimations = [];
-			for (color = 0; color < colors; color++) {
+			for (color = 0; color < playerColors; color++) {
 				typeAnimations.push(new $.gameQuery.Animation({
 					imageURL: 'images/players.png',
 					numberOfFrame: numberOfFrame,
@@ -76,14 +78,14 @@ GamePanel = function(gameHandler) {
 		offsety: 22
 	});
 
-	playerAnimations['left'] = playerAnimation(2, 3, 1, 4);
-	playerAnimations['left-idle'] = playerAnimation(2, 1, 1, 4);
-	playerAnimations['up'] = playerAnimation(1, 3, 1, 4);
-	playerAnimations['up-idle'] = playerAnimation(1, 1, 1, 4);
-	playerAnimations['right'] = playerAnimation(3, 3, 1, 4);
-	playerAnimations['right-idle'] = playerAnimation(3, 1, 1, 4);
-	playerAnimations['down'] = playerAnimation(0, 3, 1, 4);
-	playerAnimations['down-idle'] = playerAnimation(0, 1, 1, 4);
+	playerAnimations['left'] = playerAnimation(2, 3);
+	playerAnimations['left-idle'] = playerAnimation(2, 1);
+	playerAnimations['up'] = playerAnimation(1, 3);
+	playerAnimations['up-idle'] = playerAnimation(1, 1);
+	playerAnimations['right'] = playerAnimation(3, 3);
+	playerAnimations['right-idle'] = playerAnimation(3, 1);
+	playerAnimations['down'] = playerAnimation(0, 3);
+	playerAnimations['down-idle'] = playerAnimation(0, 1);
 
 	fireAnimations['c'] = fireAnimation(0);
 	fireAnimations['d'] = fireAnimation(1);

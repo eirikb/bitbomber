@@ -19,7 +19,7 @@ Player = function(x, y, width, height, nick) {
 	this.armor = 0;
 	this.bombs = 1;
 	this.power = 1;
-	this.type = 0;
+	this.type = Math.floor(Math.random() * 2);
 	this.color = 0;
 };
 

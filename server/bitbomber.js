@@ -35,8 +35,16 @@ var s4 = function() {
 	return (((1 + Math.random()) * 0x10000) | 0).toString(16).substring(1);
 };
 
-global.guid = function() {
-	return s4() + s4() + s4() + s4();
+global.guid = function(times) {
+	if (!times) {
+		times = 1;
+	}
+	var guid = '',
+	i;
+	for (i = 0; i < times; i++) {
+		guid += s4();
+	}
+	return guid;
 };
 
 players.init(socket);

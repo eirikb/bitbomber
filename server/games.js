@@ -2,8 +2,12 @@ var ingame = require('ingame'),
 openGames = {};
 
 var createGame = function() {
-	var game = new Game(640, 480).createBlocks(16).createBricks(16, 20);
-	game.guid = guid();
+	var game = new Game(640, 480).createBlocks(16).createBricks(16, 20),
+	gguid = guid();
+	while (openGames[gguid]) {
+		gguid = guid();
+	}
+	game.guid = gguid;
 	game.spots = [null, null, null, null];
 	openGames[game.guid] = game;
 	return game;

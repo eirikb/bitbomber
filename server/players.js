@@ -4,11 +4,11 @@ var register = function(client, privateGuid) {
 	var player = players[privateGuid];
 	if (!player) {
 		player = new Player(0, 0, 16, 16);
-		privateGuid = guid();
+		privateGuid = guid(4);
 		player.privateGuid = privateGuid;
 		players[privateGuid] = player;
 	}
-	player.publicGuid = guid();
+	player.publicGuid = guid(4);
 	client.player = player;
 	player.client = client;
 	var playerData = player.serialize();

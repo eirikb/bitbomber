@@ -1,4 +1,5 @@
 require.paths.unshift(__dirname);
+require.paths.unshift(__dirname + '/../shared/js/');
 
 var http = require('http'),
 nodeStatic = require('node-static'),
@@ -9,11 +10,11 @@ ingame = require('ingame'),
 socketio = require('socket.io'),
 port = 8000;
 
-global.OGE = require('../shared/js/oge.min');
-require('../shared/js/player');
-require('../shared/js/game');
-require('../shared/js/box');
-require('../shared/js/bomb');
+global.OGE = require('oge.min');
+require('player');
+require('game');
+require('box');
+require('bomb');
 
 var server = http.createServer(function(req, res) {
 	var publicFiles = new nodeStatic.Server('../public', {

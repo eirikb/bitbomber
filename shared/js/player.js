@@ -19,6 +19,8 @@ Player = function(x, y, width, height, nick) {
 	this.armor = 0;
 	this.bombs = 1;
 	this.power = 1;
+	this.type = 0;
+	this.color = 0;
 };
 
 Player.prototype = new OGE.Body();
@@ -32,6 +34,8 @@ Player.prototype.serialize = function() {
 		height: this.height,
 		speed: this.speed,
 		armor: this.armor,
+		type: this.type,
+		color: this.color,
 		publicGuid: this.publicGuid
 	};
 };

@@ -4,16 +4,25 @@ GamePanel = function(gameHandler) {
 	count = 0,
 	playerAnimations = [],
 	fireAnimations = [],
-	playerAnimation = function(direction, color, type, numberOfFrame) {
-		return new $.gameQuery.Animation({
-			imageURL: 'images/players.png',
-			numberOfFrame: numberOfFrame,
-			delta: 22,
-			rate: 120,
-			type: $.gameQuery.ANIMATION_VERTICAL,
-			offsetx: direction * 18 + color * (4 * 18),
-			offsety: type * (3 * 22)
-		});
+	playerAnimation = function(direction, numberOfFrame, types, colors) {
+		var animations = [],
+		typeAnimations, color, type;
+		for (type = 0; type < types; type++) {
+			typeAnimations = [];
+			for (color = 0; color < colors; color++) {
+				typeAnimations.push(new $.gameQuery.Animation({
+					imageURL: 'images/players.png',
+					numberOfFrame: numberOfFrame,
+					delta: 22,
+					rate: 120,
+					type: $.gameQuery.ANIMATION_VERTICAL,
+					offsetx: direction * 18 + color * (4 * 18),
+					offsety: type * (3 * 22)
+				}));
+			}
+			animations.push(typeAnimations);
+		}
+		return animations;
 	},
 	addBody = function(body, name, animation, cb) {
 		name += '-' + ++count;
@@ -67,14 +76,14 @@ GamePanel = function(gameHandler) {
 		offsety: 22
 	});
 
-	playerAnimations['left'] = playerAnimation(2, 0, 0, 3);
-	playerAnimations['left-idle'] = playerAnimation(2, 0, 0, 1);
-	playerAnimations['up'] = playerAnimation(1, 0, 0, 3);
-	playerAnimations['up-idle'] = playerAnimation(1, 0, 0, 1);
-	playerAnimations['right'] = playerAnimation(3, 0, 0, 3);
-	playerAnimations['right-idle'] = playerAnimation(3, 0, 0, 1);
-	playerAnimations['down'] = playerAnimation(0, 0, 0, 3);
-	playerAnimations['down-idle'] = playerAnimation(0, 0, 0, 1);
+	playerAnimations['left'] = playerAnimation(2, 3, 1, 4);
+	playerAnimations['left-idle'] = playerAnimation(2, 1, 1, 4);
+	playerAnimations['up'] = playerAnimation(1, 3, 1, 4);
+	playerAnimations['up-idle'] = playerAnimation(1, 1, 1, 4);
+	playerAnimations['right'] = playerAnimation(3, 3, 1, 4);
+	playerAnimations['right-idle'] = playerAnimation(3, 1, 1, 4);
+	playerAnimations['down'] = playerAnimation(0, 3, 1, 4);
+	playerAnimations['down-idle'] = playerAnimation(0, 1, 1, 4);
 
 	fireAnimations['c'] = fireAnimation(0);
 	fireAnimations['d'] = fireAnimation(1);
@@ -86,7 +95,7 @@ GamePanel = function(gameHandler) {
 
 	this.addPlayer = function(player) {
 		$('#players').addSprite("player-" + player.publicGuid, {
-			animation: playerAnimations['down-idle'],
+			animation: playerAnimations['down-idle'][player.type][player.color],
 			width: 18,
 			height: 22,
 			posx: player.x,
@@ -123,12 +132,12 @@ GamePanel = function(gameHandler) {
 	};
 
 	this.startMove = function(player, dir) {
-		$('#player-' + player.publicGuid).setAnimation(playerAnimations[dir]);
+		$('#player-' + player.publicGuid).setAnimation(playerAnimations[dir][player.type][player.color]);
 		player.lastDir = dir;
 	};
 
 	this.endMove = function(player) {
-		$('#player-' + player.publicGuid).setAnimation(playerAnimations[player.lastDir + '-idle']);
+		$('#player-' + player.publicGuid).setAnimation(playerAnimations[player.lastDir + '-idle'][player.type][player.color]);
 	};
 };
 

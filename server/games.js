@@ -24,6 +24,7 @@ var playNow = function(player) {
 	}
 	pos = game.spots.indexOf(null);
 	game.spots[pos] = player;
+	player.color = pos;
 	player.x = 0;
 	player.y = 0;
 	switch (pos) {

@@ -9,12 +9,14 @@ games = require('games'),
 ingame = require('ingame'),
 socketio = require('socket.io'),
 port = 8000;
-
+/*
 global.OGE = require('oge.min');
+global._ = require('underscore-min');
 require('player');
 require('game');
 require('box');
 require('bomb');
+*/
 
 var server = http.createServer(function(req, res) {
 	var publicFiles = new nodeStatic.Server('../public', {

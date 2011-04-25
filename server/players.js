@@ -1,4 +1,5 @@
-var players = {};
+var players = {},
+Player = require('player');
 
 var register = function(client, privateGuid) {
 	var player = players[privateGuid];
@@ -34,7 +35,9 @@ exports.init = function(socket) {
 					}
 					break;
 				case 'login':
-					client.player.nick = msg.nick;
+					if (client.player) {
+						client.player.nick = msg.nick;
+					}
 					break;
 			}
 		});

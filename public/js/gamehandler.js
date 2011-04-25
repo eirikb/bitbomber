@@ -1,6 +1,7 @@
 GameHandler = function(client) {
 	var gamePanel = new GamePanel(this),
 	game,
+	bombs = {},
 	$lobbyPanel = $('#lobbyPanel'),
 	$gamePanel = $('#gamePanel'),
 	keyboardHandler = new KeyboardHandler();
@@ -44,8 +45,35 @@ GameHandler = function(client) {
 		player.y = parseInt(data.y, 10);
 	}
 
+	function addBomb(bomb) {
+		bombs[bomb.guid] = bomb;
+		game.addBody(bomb);
+		gamePanel.addBomb(bomb);
+	}
+
+	function placeBomb() {
+		client.send({
+			cmd: 'placeBomb', 
+			x: bitbomber.player.x, 
+			y:bitbomber.player.y
+		});
+	}
+
+	function explodeBomb(bombGuid) {
+		var bomb = bombs[bombGuid];
+		if (bomb) {
+			var data = game.explodeBomb(bomb);
+			game.removeBodies(data.bombs, Bomb);
+			gamePanel.explodeBomb(data);
+		}
+	}
+
 	this.step = function() {
 		game.world.step();
+	};
+
+	this.removeBody = function(body) {
+		game.removeBody(body);
 	};
 
 	keyboardHandler.keydown(function(dir) {
@@ -53,10 +81,7 @@ GameHandler = function(client) {
 		sin = 0;
 		switch (dir) {
 			case 'space':
-				var bomb = gameHandler.placeBomb();
-				if ( !! bomb) {
-					placeBomb(bomb);
-				}
+				placeBomb();
 				break;
 			case 'left':
 				cos = - 1;
@@ -111,6 +136,12 @@ GameHandler = function(client) {
 				break;
 			case 'leaveGame':
 				leaveGame(msg.publicGuid);
+				break;
+			case 'addBomb':
+				addBomb(Bomb.deserialize(msg.bomb));
+				break;
+			case 'explodeBomb':
+				explodeBomb(msg.bombGuid);
 				break;
 		}
 	});

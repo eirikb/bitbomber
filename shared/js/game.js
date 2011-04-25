@@ -4,6 +4,16 @@
  * @constructur
  * @return {Game}
  */
+
+var OGE = OGE,
+Box = Box,
+Bomb = Bomb;
+if (typeof require !== 'undefined') {
+	OGE = require('oge');
+	Box = require('box');
+	Bomb = require('bomb');
+}
+
 Game = function(width, height) {
 	this.world = new OGE.World(width, height, 16);
 	this.players = [];
@@ -16,15 +26,6 @@ Game = function(width, height) {
 };
 
 Game.version = 0.8;
-
-Game.prototype.getBomb = function(x, y) {
-	for (var i = 0; i < this.bombs.length; i++) {
-		if (this.bombs[i].x === x && this.bombs[i].y === y) {
-			return this.bombs[i];
-		}
-	}
-	return null;
-};
 
 Game.prototype.removeBodies = function(bodies, type) {
 	var self = this;
@@ -269,3 +270,7 @@ Game.deserialize = function(data, player) {
 	return game;
 };
 
+// Export OGE for CommonJS
+if (typeof module !== 'undefined' && module.exports) {
+	module.exports = Game;
+}

@@ -4,6 +4,9 @@
  * @constructur
  * @return {Player}
  */
+
+var OGE = typeof require !== 'undefined' ? require('oge') : OGE;
+
 Player = function(x, y, width, height, nick) {
 	this.nick = nick;
 	if (arguments.length === 1) {
@@ -49,4 +52,9 @@ Player.deserialize = function(data, player) {
 	}
 	return player;
 };
+
+// Export OGE for CommonJS
+if (typeof module !== 'undefined' && module.exports) {
+	module.exports = Player;
+}
 

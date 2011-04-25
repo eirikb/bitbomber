@@ -19,7 +19,7 @@ GamePanel = function(gameHandler) {
 					rate: 120,
 					type: $.gameQuery.ANIMATION_VERTICAL,
 					offsetx: direction * 18 + color * (4 * 18),
-					offsety: type * (3 * 22)
+					offsety: type * (4 * 22)
 				}));
 			}
 			animations.push(typeAnimations);
@@ -78,13 +78,13 @@ GamePanel = function(gameHandler) {
 		offsety: 22
 	});
 
-	playerAnimations['left'] = playerAnimation(2, 3);
+	playerAnimations['left'] = playerAnimation(2, 4);
 	playerAnimations['left-idle'] = playerAnimation(2, 1);
-	playerAnimations['up'] = playerAnimation(1, 3);
+	playerAnimations['up'] = playerAnimation(1, 4);
 	playerAnimations['up-idle'] = playerAnimation(1, 1);
-	playerAnimations['right'] = playerAnimation(3, 3);
+	playerAnimations['right'] = playerAnimation(3, 4);
 	playerAnimations['right-idle'] = playerAnimation(3, 1);
-	playerAnimations['down'] = playerAnimation(0, 3);
+	playerAnimations['down'] = playerAnimation(0, 4);
 	playerAnimations['down-idle'] = playerAnimation(0, 1);
 
 	fireAnimations['c'] = fireAnimation(0);
@@ -140,6 +140,37 @@ GamePanel = function(gameHandler) {
 
 	this.endMove = function(player) {
 		$('#player-' + player.publicGuid).setAnimation(playerAnimations[player.lastDir + '-idle'][player.type][player.color]);
+	};
+
+	this.addBomb = function(bomb) {
+		$('#background').addSprite('bomb-' + bomb.guid, {
+			animation: bombAnimation,
+			width: 16,
+			height: 16,
+			posx: bomb.x,
+			posy: bomb.y
+		});
+	};
+
+	this.explodeBomb = function(data) {
+		_.each(data.bombs, function(b) {
+			$('#bomb-' + b.guid).remove();
+		});
+		_.each(data.fires, function(fire) {
+			addBody(fire, 'fire', fireAnimations[fire.firevar], function(e) {
+				$(e).remove();
+			});
+		});
+		_.each(data.bodies, function(body) {
+			if (body instanceof Box) {
+				console.log(body.name);
+				$('#' + body.name).remove();
+				addBody(body, 'firebrick', fireBrick, function(e) {
+					gameHandler.removeBody(body);
+					$(e).remove();
+				});
+			}
+		});
 	};
 };
 

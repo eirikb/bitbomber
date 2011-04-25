@@ -1,4 +1,5 @@
 var ingame = require('ingame'),
+Game = require('game'),
 openGames = {};
 
 var createGame = function() {
@@ -66,7 +67,9 @@ exports.init = function(socket) {
 			}
 		});
 		client.on('disconnect', function() {
-			leaveGame(client.player);
+			if (client.player) {
+				leaveGame(client.player);
+			}
 		});
 	});
 };

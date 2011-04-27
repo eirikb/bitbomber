@@ -9,9 +9,9 @@ var OGE = OGE,
 Box = Box,
 Bomb = Bomb;
 if (typeof require !== 'undefined') {
-	OGE = require('oge');
-	Box = require('box');
-	Bomb = require('bomb');
+	OGE = require('./oge');
+	Box = require('./box');
+	Bomb = require('./bomb');
 }
 
 Game = function(width, height) {

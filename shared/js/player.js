@@ -5,7 +5,7 @@
  * @return {Player}
  */
 
-var OGE = typeof require !== 'undefined' ? require('oge') : OGE;
+var OGE = typeof require !== 'undefined' ? require('./oge') : OGE;
 
 Player = function(x, y, width, height, nick) {
 	this.nick = nick;

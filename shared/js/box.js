@@ -5,7 +5,7 @@
  * @return {Box}
  */
 
-var OGE = typeof require !== 'undefined' ? require('oge') : OGE;
+var OGE = typeof require !== 'undefined' ? require('./oge') : OGE;
 
 Box = function() {
 	OGE.Body.apply(this, arguments);

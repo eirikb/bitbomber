@@ -11,9 +11,9 @@ nowjs = require('now');
 port = 8000;
 
 var server = http.createServer(function(req, res) {
-	var publicFiles = new nodeStatic.Server('../public', {
+	var publicFiles = new nodeStatic.Server('public', {
 		cache: false
-	}), sharedFiles = new nodeStatic.Server('../shared', {
+	}), sharedFiles = new nodeStatic.Server('shared', {
 		cache: false
 	});
 

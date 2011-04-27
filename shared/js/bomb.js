@@ -5,7 +5,7 @@
  * @return {Bomb}
  */
 
-var OGE = typeof require !== 'undefined' ? require('oge') : OGE;
+var OGE = typeof require !== 'undefined' ? require('./oge') : OGE;
 
 Bomb = function() {
 	OGE.Body.apply(this, arguments);

@@ -21,7 +21,6 @@ $(function() {
 	$infoArea = $('#infoArea');
 	utils.log('Versions: OGE: ' + OGE.version + '. Game: ' + Game.version + '. Client: ' + bitbomber.version);
 
-	var client = new io.Socket();
-	gameHandler = new GameHandler(client),
-	lobbyHandler = new LobbyHandler(client);
+	gameHandler = new GameHandler(),
+	lobbyHandler = new LobbyHandler();
 });

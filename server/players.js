@@ -1,7 +1,11 @@
 var players = {},
 Player = require('player');
 
-var register = function(client, privateGuid) {
+exports.getPlayer = function(n) {
+	return n.user ? players[n.user.clientId] : players[n];
+}
+
+exports.register = function(privateGuid, callback) {
 	var player = players[privateGuid];
 	if (!player) {
 		player = new Player(0, 0, 16, 16);
@@ -9,41 +13,14 @@ var register = function(client, privateGuid) {
 		player.privateGuid = privateGuid;
 		players[privateGuid] = player;
 	}
+	players[this.user.clientId] = player;
 	player.publicGuid = guid(4);
-	client.player = player;
-	player.client = client;
 	var playerData = player.serialize();
 	playerData.privateGuid = player.privateGuid;
-	client.send({
-		cmd: 'register', 
-		player: playerData
-	});
+	player.clientId = this.user.clientId;
+	callback(playerData);
 };
 
-var logout = function() {
+exports.logout = function(clientId) {
+	delete players[clientId];
 };
-
-exports.init = function(socket) {
-	socket.on('connection', function(client) {
-		client.on('message', function(msg) {
-			switch (msg.cmd) {
-				case 'register':
-					if (!client.player) {
-						register(client, msg.privateGuid);
-					} else {
-						console.log('already registered');
-					}
-					break;
-				case 'login':
-					if (client.player) {
-						client.player.nick = msg.nick;
-					}
-					break;
-			}
-		});
-	});
-	socket.on('disconnect', function(client) {
-		logout(client);
-	});
-};
-

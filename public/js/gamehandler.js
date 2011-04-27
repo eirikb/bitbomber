@@ -6,7 +6,7 @@ GameHandler = function(client) {
 	$gamePanel = $('#gamePanel'),
 	keyboardHandler = new KeyboardHandler();
 
-	function game(gameData) {
+	now.game = function(gameData) {
 		var player = bitbomber.player;
 		game = Game.deserialize(gameData, player);
 		utils.log(game.players);
@@ -16,13 +16,13 @@ GameHandler = function(client) {
 		keyboardHandler.init();
 	}
 
-	function joinGame(playerData) {
+	now.joinGame = function(playerData) {
 		var player = Player.deserialize(playerData);
 		game.addBody(player, true);
 		gamePanel.addPlayer(player);
 	}
 
-	function leaveGame(publicGuid) {
+	now.leaveGame = function(publicGuid) {
 		var player = game.getPlayer(publicGuid);
 		if (player !== null) {
 			gamePanel.removePlayer(player);
@@ -30,26 +30,23 @@ GameHandler = function(client) {
 		}
 	}
 
-	function startEndMove(data) {
-		var player = game.getPlayer(data.publicGuid),
-		cos = parseInt(data.cos),
-		sin = parseInt(data.sin);
-		if (!isNaN(cos) && !isNaN(sin)) {
-			player.direction = new OGE.Direction(parseInt(data.cos, 10), parseInt(data.sin, 10));
-			gamePanel.startMove(player, data.dir);
+	now.move = function(publicGuid, direction, x, y) {
+		var player = game.getPlayer(publicGuid);
+		player.direction = direction !== null ? OGE.Direction.deserialize(direction) : null;
+		player.x = x;
+		player.y = y;
+		if (direction !== null) {
+			gamePanel.startMove(player, direction.dir);
 		} else {
-			player.direction = null;
 			gamePanel.endMove(player);
 		}
-		player.x = parseInt(data.x, 10);
-		player.y = parseInt(data.y, 10);
-	}
+	};
 
-	function addBomb(bomb) {
+	now.addBomb = function(bomb) {
 		bombs[bomb.guid] = bomb;
 		game.addBody(bomb);
 		gamePanel.addBomb(bomb);
-	}
+	};
 
 	function placeBomb() {
 		client.send({
@@ -59,7 +56,7 @@ GameHandler = function(client) {
 		});
 	}
 
-	function explodeBomb(bombGuid) {
+	now.explodeBomb = function(bombGuid) {
 		var bomb = bombs[bombGuid];
 		if (bomb) {
 			var data = game.explodeBomb(bomb);
@@ -98,51 +95,12 @@ GameHandler = function(client) {
 		}
 		if (cos !== 0 || sin !== 0) {
 			var player = bitbomber.player,
-			data = {
-				cmd: 'startMove',
-				dir: dir,
-				cos: cos, 
-				sin: sin, 
-				x: player.x, 
-				y: player.y
-			};
-			client.send(data);
-			data.publicGuid = player.publicGuid;
-			startEndMove(data);
+			direction = new OGE.Direction(cos, sin).serialize();
+			direction.dir = dir;
+			now.startEndMove(direction, player.x, player.y);
 		}
 	}).keyup(function(e) {
-		var player = bitbomber.player,
-		data = {
-			cmd: 'endMove',
-			x: player.x, 
-			y: player.y
-		};
-		client.send(data);
-		data.publicGuid = player.publicGuid;
-		startEndMove(data);
-	});
-
-	client.on('message', function(msg) {
-		switch (msg.cmd) {
-			case 'game':
-				game(msg.game);
-				break;
-			case 'startMove':
-			case 'endMove':
-				startEndMove(msg);
-				break;
-			case 'joinGame':
-				joinGame(msg.player);
-				break;
-			case 'leaveGame':
-				leaveGame(msg.publicGuid);
-				break;
-			case 'addBomb':
-				addBomb(Bomb.deserialize(msg.bomb));
-				break;
-			case 'explodeBomb':
-				explodeBomb(msg.bombGuid);
-				break;
-		}
+		var player = bitbomber.player;
+		now.startEndMove(null, player.x, player.y);
 	});
 };

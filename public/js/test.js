@@ -21,11 +21,23 @@ $(function() {
 	$infoArea = $('#infoArea');
 	utils.log('Versions: OGE: ' + OGE.version + '. Game: ' + Game.version + '. Client: ' + bitbomber.version);
 
-	var client = new io.Socket();
-	gameHandler = new GameHandler(client),
-	lobbyHandler = new LobbyHandler(client);
+	gameHandler = new GameHandler(),
+	lobbyHandler = new LobbyHandler();
 
+	now.ready(function() {
+		now.register('lol', function(playerData) {
+			if (playerData) {
+				bitbomber.player = Player.deserialize(playerData);
+				utils.log('player', bitbomber.player);
+				now.playNow();
+				$('#gamePanel').show();
+				$('#lobbyPanel').hide();
+				$('#loginPanel').hide();
+			}
+		});
+	});
 
+/*
 	client.on('message', function(msg) {
 		console.log(msg.cmd, msg);
 		switch (msg.cmd) {
@@ -43,4 +55,5 @@ $(function() {
 				break;
 		}
 	});
+	*/
 });

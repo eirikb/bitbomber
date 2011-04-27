@@ -1,4 +1,5 @@
-var ingame = require('ingame'),
+var players = require('players'),
+nowjs = require('now'),
 Game = require('game'),
 openGames = {};
 
@@ -14,16 +15,17 @@ var createGame = function() {
 	return game;
 };
 
-var playNow = function(player) {
-	var games = Object.keys(openGames),
-	game,
-	pos = 0;
+var getRandomGame = function() {
+	var games = Object.keys(openGames);
 	if (games.length > 0) {
-		game = openGames[games[Math.floor(Math.random() * games.length)]];
+		return openGames[games[Math.floor(Math.random() * games.length)]];
 	} else {
-		game = createGame();
+		return createGame();
 	}
-	pos = game.spots.indexOf(null);
+};
+
+var addPlayerToGame = function(game, player) {
+	var pos = game.spots.indexOf(null);
 	game.spots[pos] = player;
 	player.color = pos;
 	player.x = 0;
@@ -38,38 +40,29 @@ var playNow = function(player) {
 			player.y = game.world.height - player.height;
 			break;
 	}
+
+	var group = nowjs.getGroup(game.guid);
+	group.now.joinGame && group.now.joinGame(player.serialize());
+	group.addUser(player.clientId);
+
 	game.addBody(player, true);
 	player.game = game;
-	ingame.joinGame(player);
-	player.client.send({
-		cmd: 'game', 
-		game: game.serialize()
-	});
 };
 
-var leaveGame = function(player) {
+exports.playNow = function() {
+	var player = players.getPlayer(this),
+	game = getRandomGame();
+	addPlayerToGame(game, player);
+	this.now.game(game.serialize());
+};
+
+exports.logout = function(clientId) {
+	var player = players.getPlayer(clientId);
 	if (player.game) {
-		ingame.leaveGame(player);
+		nowjs.getGroup(player.game.guid).now.leaveGame(player.publicGuid);
 		var pos = player.game.spots.indexOf(player);
 		player.game.spots[pos] = null;
 		player.game.removeBody(player);
 		player.game = null;
 	}
-};
-
-exports.init = function(socket) {
-	socket.on('connection', function(client) {
-		client.on('message', function(msg) {
-			switch (msg.cmd) {
-				case 'playNow':
-					playNow(client.player);
-					break;
-			}
-		});
-		client.on('disconnect', function() {
-			if (client.player) {
-				leaveGame(client.player);
-			}
-		});
-	});
 };

@@ -47,10 +47,7 @@ Player.deserialize = function(data, player) {
 	if (!player) {
 		player = new Player(data.x, data.y, data.width, data.height, data.nick);
 	}
-	for (attr in data) {
-		player[attr] = data[attr];
-	}
-	return player;
+	return OGE.merge(player, data);
 };
 
 // Export OGE for CommonJS

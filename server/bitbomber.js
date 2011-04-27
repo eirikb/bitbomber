@@ -7,16 +7,8 @@ url = require('url'),
 players = require('players'),
 games = require('games'),
 ingame = require('ingame'),
-socketio = require('socket.io'),
+nowjs = require('now');
 port = 8000;
-/*
-global.OGE = require('oge.min');
-global._ = require('underscore-min');
-require('player');
-require('game');
-require('box');
-require('bomb');
-*/
 
 var server = http.createServer(function(req, res) {
 	var publicFiles = new nodeStatic.Server('../public', {
@@ -32,7 +24,7 @@ var server = http.createServer(function(req, res) {
 	});
 });
 
-var socket = socketio.listen(server);
+var everyone = nowjs.initialize(server);
 
 var s4 = function() {
 	return (((1 + Math.random()) * 0x10000) | 0).toString(16).substring(1);
@@ -50,9 +42,14 @@ global.guid = function(times) {
 	return guid;
 };
 
-players.init(socket);
-games.init(socket);
-ingame.init(socket);
+everyone.now.register = players.register;
+everyone.now.playNow = games.playNow;
+everyone.now.startEndMove = ingame.startEndMove;
+
+everyone.on('disconnect', function(clientId) {
+	games.logout(clientId);
+	players.logout(clientId);
+});
 
 server.listen(port);
 console.log('Server running at ' + port);

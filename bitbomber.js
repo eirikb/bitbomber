@@ -1,6 +1,3 @@
-require.paths.unshift(__dirname);
-require.paths.unshift(__dirname + '/../shared/js/');
-
 var http = require('http'),
 nodeStatic = require('node-static'),
 url = require('url'),

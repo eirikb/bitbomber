@@ -163,7 +163,6 @@ GamePanel = function(gameHandler) {
 		});
 		_.each(data.bodies, function(body) {
 			if (body instanceof Box) {
-				console.log(body.name);
 				$('#' + body.name).remove();
 				addBody(body, 'firebrick', fireBrick, function(e) {
 					gameHandler.removeBody(body);

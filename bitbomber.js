@@ -28,12 +28,9 @@ var s4 = function() {
 };
 
 global.guid = function(times) {
-	if (!times) {
-		times = 1;
-	}
-	var guid = '',
-	i;
-	for (i = 0; i < times; i++) {
+	times = times ? times : 1;
+	var guid = '';
+	for (var i = 0; i < times; i++) {
 		guid += s4();
 	}
 	return guid;
@@ -42,6 +39,7 @@ global.guid = function(times) {
 everyone.now.register = players.register;
 everyone.now.playNow = games.playNow;
 everyone.now.startEndMove = ingame.startEndMove;
+everyone.now.placeBomb = ingame.placeBomb;
 
 everyone.on('disconnect', function(clientId) {
 	games.logout(clientId);

@@ -42,19 +42,12 @@ GameHandler = function(client) {
 		}
 	};
 
-	now.addBomb = function(bomb) {
+	now.addBomb = function(bombData) {
+		var bomb = Bomb.deserialize(bombData);
 		bombs[bomb.guid] = bomb;
 		game.addBody(bomb);
 		gamePanel.addBomb(bomb);
 	};
-
-	function placeBomb() {
-		client.send({
-			cmd: 'placeBomb', 
-			x: bitbomber.player.x, 
-			y:bitbomber.player.y
-		});
-	}
 
 	now.explodeBomb = function(bombGuid) {
 		var bomb = bombs[bombGuid];
@@ -78,7 +71,7 @@ GameHandler = function(client) {
 		sin = 0;
 		switch (dir) {
 			case 'space':
-				placeBomb();
+				now.placeBomb(bitbomber.player.x, bitbomber.player.y);
 				break;
 			case 'left':
 				cos = - 1;

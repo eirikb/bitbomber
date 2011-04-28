@@ -1,17 +1,8 @@
-var LobbyHandler = function(client) {
+var LobbyHandler = function() {
 	var $loginButton = $('#loginButton'),
 	$nickField = $('#nickField'),
 	$playNowButton = $('#playNowButton'),
 	$createGameButton = $('#createGameButton');
-
-/*
-	now.register = function(playerData) {
-		if (playerData) {
-			bitbomber.player = Player.deserialize(playerData);
-			utils.log('player', bitbomber.player);
-		}
-	}
-	*/
 
 	function login() {
 		nick = $nickField.val();
@@ -47,9 +38,8 @@ var LobbyHandler = function(client) {
 		createGame();
 	});
 
-
 	now.ready(function() {
-		now.register('lol', function(data) {
+		now.register('', function(data) {
 			});
 	});
 };

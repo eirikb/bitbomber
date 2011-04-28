@@ -1,4 +1,4 @@
-GameHandler = function(client) {
+GameHandler = function() {
 	var gamePanel = new GamePanel(this),
 	game,
 	bombs = {},
@@ -92,7 +92,7 @@ GameHandler = function(client) {
 			direction.dir = dir;
 			now.startEndMove(direction, player.x, player.y);
 		}
-	}).keyup(function(e) {
+	}).keyup(function() {
 		var player = bitbomber.player;
 		now.startEndMove(null, player.x, player.y);
 	});

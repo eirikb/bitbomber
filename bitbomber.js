@@ -8,33 +8,20 @@ nowjs = require('now');
 port = 9706;
 
 var server = http.createServer(function(req, res) {
-	var publicFiles = new nodeStatic.Server('public', {
-		cache: false
-	}), sharedFiles = new nodeStatic.Server('shared', {
-		cache: false
-	});
+    var publicFiles = new nodeStatic.Server('public', {
+        cache: false
+    }), sharedFiles = new nodeStatic.Server('shared', {
+        cache: false
+    });
 
-	publicFiles.serve(req, res, function (e) {
-		if (e) {
-			sharedFiles.serve(req, res);
-		}
-	});
+    publicFiles.serve(req, res, function (e) {
+        if (e) {
+            sharedFiles.serve(req, res);
+        }
+    });
 });
 
 var everyone = nowjs.initialize(server);
-
-var s4 = function() {
-	return (((1 + Math.random()) * 0x10000) | 0).toString(16).substring(1);
-};
-
-global.guid = function(times) {
-	times = times ? times : 1;
-	var guid = '';
-	for (var i = 0; i < times; i++) {
-		guid += s4();
-	}
-	return guid;
-};
 
 everyone.now.register = players.register;
 everyone.now.playNow = games.playNow;
@@ -42,8 +29,8 @@ everyone.now.startEndMove = ingame.startEndMove;
 everyone.now.placeBomb = ingame.placeBomb;
 
 everyone.on('disconnect', function(clientId) {
-	games.logout(clientId);
-	players.logout(clientId);
+    games.logout(clientId);
+    players.logout(clientId);
 });
 
 server.listen(port);

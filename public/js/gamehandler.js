@@ -30,16 +30,18 @@ GameHandler = function() {
 		}
 	}
 
-	now.move = function(publicGuid, direction, x, y) {
-		var player = game.getPlayer(publicGuid);
-		player.direction = direction !== null ? OGE.Direction.deserialize(direction) : null;
-		player.x = x;
-		player.y = y;
-		if (direction !== null) {
-			gamePanel.startMove(player, direction.dir);
-		} else {
-			gamePanel.endMove(player);
-		}
+	now.move = function(publicGuid, direction, x, y, hack) {
+        if (hack || publicGuid !== bitbomber.player.publicGuid) {
+            var player = game.getPlayer(publicGuid);
+            player.direction = direction !== null ? OGE.Direction.deserialize(direction) : null;
+            player.x = x;
+            player.y = y;
+            if (direction !== null) {
+                gamePanel.startMove(player, direction.dir);
+            } else {
+                gamePanel.endMove(player);
+            }
+        }
 	};
 
 	now.addBomb = function(bombData) {
@@ -91,9 +93,11 @@ GameHandler = function() {
 			direction = new OGE.Direction(cos, sin).serialize();
 			direction.dir = dir;
 			now.startEndMove(direction, player.x, player.y);
+			now.move(player.publicGuid, direction, player.x, player.y, true);
 		}
 	}).keyup(function() {
 		var player = bitbomber.player;
 		now.startEndMove(null, player.x, player.y);
+		now.move(player.publicGuid, null, player.x, player.y, true);
 	});
 };

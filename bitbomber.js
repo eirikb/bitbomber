@@ -5,7 +5,7 @@ players = require('players'),
 games = require('games'),
 ingame = require('ingame'),
 nowjs = require('now');
-port = 8000;
+port = 9706;
 
 var server = http.createServer(function(req, res) {
 	var publicFiles = new nodeStatic.Server('public', {

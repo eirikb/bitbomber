@@ -1,20 +1,20 @@
 bb.lobby = (function() {
-    var $loginButton = $('#loginButton'),
-    $nickField = $('#nickField'),
-    $playNowButton = $('#playNowButton'),
-    $createGameButton = $('#createGameButton');
+
+} ());
+
+$(function() {
+    var $nickField = $('#nickField');
 
     function login() {
         nick = $nickField.val();
         if (nick) {
-            now.login(nick, function(ok) {
-                $('#loginPanel').hide();
-                $('#lobbyPanel').show();
-            });
+            bb.client.setNick(nick);
+            $('#login').slideUp();
+            $('#menu').slideDown();
         }
     }
 
-    $loginButton.click(function() {
+    $('#loginButton').click(function() {
         login();
     });
 
@@ -24,10 +24,15 @@ bb.lobby = (function() {
         }
     });
 
-    $playNowButton.click(function() {});
+    $('#playNowButton').click(function() {
+        console.log('PLAYNOW');
+        $('#lobby').slideUp();
+        $('#game').slideDown();
+        bb.client.playNow();
+    });
 
-    $createGameButton.click(function() {
+    $('#createGameButton').click(function() {
         createGame();
     });
-} ());
+});
 

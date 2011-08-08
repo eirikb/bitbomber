@@ -10,31 +10,28 @@ var app = express.createServer();
 app.use(express.static('public'));
 app.listen(5050);
 
-var getPlayer = function(client) {
-    if (!client.player) {
-        client.player = {
-            guid: s4() + s4(),
-            x: 0,
-            y: 0,
-            width: 48,
-            height: 48,
-            hp: 100,
-            speed: 5
-        };
-    }
-    clients[client.player.guid] = client;
-    return client.player;
-};
+function createPlayer() {
+    return {
+        guid: s4() + s4(),
+        x: 0,
+        y: 0,
+        width: 48,
+        height: 48,
+        hp: 100,
+        speed: 5
+    };
+}
 
-var getGame = function(client, guid) {
-    if (openGames.length === 0) {
-        openGames.push({
-            guid: s4() + s4(),
-            width: 900,
-            height: 400,
-            players: {}
-        });
-    }
+function createGame() {
+    return {
+        guid: s4() + s4(),
+        width: 900,
+        height: 400,
+        players: {}
+    };
+}
+
+function getGame(client, guid) {
     var game = openGames[0];
     if (guid) {
         game = openGames.filter(function(g) {
@@ -50,28 +47,35 @@ var getGame = function(client, guid) {
     }
     client.game = game;
     return game;
-};
+}
 
-var all = function(client, cb, x) {
-    Object.keys(client.game.players).forEach(function(k) {
-        var p = client.game.players[k];
-        if (!x || p !== client.player) {
-            cb(clients[p.guid]);
-        }
+function all(client, cb) {
+    client.game.players.forEach(function(player) {
+        cb(clients[player.guid]);
     });
-};
+}
 
-var allX = function(client, cb) {
-    all(client, cb, true);
-};
+function allX(client, cb) {
+    client.game.players.filter(function(player) {
+        return client.player !== player;
+    }).forEach(function(player) {
+        cb(clients[player.guid]);
+    });
+}
 
-var updatePlayer = function(client, x, y) {
+function updatePlayer(client, x, y) {
     client.player.x = x;
     client.player.y = y;
     return client.player;
-};
+}
 
 dnode(function(client, con) {
+
+    con.on('ready', function() {
+        client.player = createPlayer();
+        client.register(client.player);
+    });
+
     con.on('end', function() {
         allX(client, function(c) {
             c.leave(client.player.guid);
@@ -79,13 +83,19 @@ dnode(function(client, con) {
         delete client.game.players[client.player.guid];
     });
 
-    this.start = function(cb, guid) {
-        var player = getPlayer(client),
-        game = getGame(client, guid);
-        allX(client, function(c) {
-            c.join(client.player);
+    this.setNick = function(nick)  {
+        client.player.nick = nick;
+    };
+
+    this.playNow = function() {
+        var game = getGame();
+        if (!game) {
+            game = createGame();
+        }
+        allX(function(c) {
+            c.addPlayer(client.player);
         });
-        cb(game, player.guid);
+        c.game(game);
     };
 
     this.move = function(x, y, way) {

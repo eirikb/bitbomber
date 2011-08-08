@@ -1,5 +1,5 @@
 bb.panel = (function() {
-    var $gamePanel = $('#gamePanel'),
+    var $gamePanel = $('#game'),
     REFRESH_RATE = 30,
     count = 0;
 
@@ -22,7 +22,7 @@ bb.panel = (function() {
         });
     }
 
-    var addPlayer = function(player) {
+    function addPlayer(player) {
         $('#players').addSprite("player-" + player.publicGuid, {
             animation: playerAnimations['down-idle'][player.type][player.color],
             width: 18,
@@ -31,13 +31,13 @@ bb.panel = (function() {
             posy: player.y
         });
         $('#player-' + player.publicGuid)[0].player = player;
-    };
+    }
 
-    var removePlayer = function(player) {
+    function removePlayer(player) {
         $('#player-' + player.publicGuid).remove();
-    };
+    }
 
-    var startGame = function(game) {
+    function startGame(game) {
         var self = this;
         $gamePanel.playground({
             width: game.world.width,
@@ -58,18 +58,18 @@ bb.panel = (function() {
             gameHandler.step();
         },
         REFRESH_RATE);
-    };
+    }
 
-    var startMove = function(player, dir) {
+    function startMove(player, dir) {
         $('#player-' + player.publicGuid).setAnimation(playerAnimations[dir][player.type][player.color]);
         player.lastDir = dir;
-    };
+    }
 
-    var endMove = function(player) {
+    function endMove(player) {
         $('#player-' + player.publicGuid).setAnimation(playerAnimations[player.lastDir + '-idle'][player.type][player.color]);
-    };
+    }
 
-    var addBomb = function(bomb) {
+    function addBomb(bomb) {
         $('#background').addSprite('bomb-' + bomb.guid, {
             animation: bombAnimation,
             width: 16,
@@ -77,18 +77,18 @@ bb.panel = (function() {
             posx: bomb.x,
             posy: bomb.y
         });
-    };
+    }
 
-    var explodeBomb = function(data) {
-        _.each(data.bombs, function(b) {
+    function explodeBomb(data) {
+        $.each(data.bombs, function(b) {
             $('#bomb-' + b.guid).remove();
         });
-        _.each(data.fires, function(fire) {
+        $.each(data.fires, function(fire) {
             addBody(fire, 'fire', fireAnimations[fire.firevar], function(e) {
                 $(e).remove();
             });
         });
-        _.each(data.bodies, function(body) {
+        $.each(data.bodies, function(body) {
             if (body instanceof Box) {
                 $('#' + body.name).remove();
                 addBody(body, 'firebrick', fireBrick, function(e) {
@@ -97,6 +97,10 @@ bb.panel = (function() {
                 });
             }
         });
+    }
+
+    return {
+        startGame: startGame
     };
 } ());
 

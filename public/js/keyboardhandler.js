@@ -1,69 +1,54 @@
-KeyboardHandler = function() {
-	var keyCode, keydown, keyup,
-	self = this;
-	self.enabled = true;
+keyboard = (function() {
+    var enabled = false,
+    keyCode;
 
-	self.keydown = function(callback) {
-		keydown = callback;
-		return this;
-	};
-
-	self.keyup = function(callback) {
-		keyup = callback;
-		return this;
-	};
-
-	self.init = function() {
-		$(document).keydown(function(e) {
-			var dir = null;
-			switch (e.keyCode) {
-				case 32:
-					dir = 'space';
-					break;
-				case 37:
-				case 65:
-					dir = 'left';
-					break;
-				case 38:
-				case 87:
-					dir = 'up';
-					break;
-				case 39:
-				case 68:
-					dir = 'right';
-					break;
-				case 40:
-				case 83:
-					dir = 'down';
-					break;
-			}
-			if (dir !== null) {
-				if (keyCode !== e.keyCode) {
-					keyCode = dir !== 'space' ? e.keyCode : keyCode;
-					self.enabled && keydown(dir);
-				}
-				e.stopPropagation();
-				e.preventDefault();
-				return false;
-			}
-			return true;
-		}).keyup(function(e) {
-			if (e.keyCode === keyCode) {
-				keyCode = 0;
-				self.enabled && keyup();
-			}
-		}).keypress(function(e) {
-			switch (e.keyCode) {
-				case 32:
-				case 37:
-				case 38:
-				case 39:
-				case 40:
-					e.stopPropagation();
-					e.preventDefault();
-					return false;
-			}
-		});
-	};
-};
+    self.init = function() {
+        $(document).keydown(function(e) {
+            if (enabled && keyCode !== e.keyCode) {
+                keyCode = e.keyCode !== 32 ? e.keyCode: keyCode;
+                switch (e.keyCode) {
+                case 32:
+                    bb.ingame.space();
+                    break;
+                case 37:
+                case 65:
+                    bb.ingame.cos( - 1);
+                    break;
+                case 38:
+                case 87:
+                    bb.ingame.sin( - 1);
+                    break;
+                case 39:
+                case 68:
+                    bb.ingame.cos(1);
+                    break;
+                case 40:
+                case 83:
+                    bb.ingame.sin(1);
+                    break;
+                }
+                e.stopPropagation();
+                e.preventDefault();
+                return false;
+            }
+            return true;
+        }).keyup(function(e) {
+            if (enabled && e.keyCode === keyCode) {
+                keyCode = 0;
+                bb.ingame.keyup();
+            }
+        }).keypress(function(e) {
+            switch (e.keyCode) {
+            case 32:
+            case 37:
+            case 38:
+            case 39:
+            case 40:
+                e.stopPropagation();
+                e.preventDefault();
+                return false;
+            }
+        });
+    };
+} ());
 

@@ -5,6 +5,7 @@ html {
     -o-background-size: cover;
     background-size: cover;
 }
+
 #content {
 	margin-top: 25px;
 	text-align: center;
@@ -17,65 +18,50 @@ html {
 	border-radius: 15px;
     font-family: Helvetica;
 }
-#gamePanel {
+
+#game {
     display: none;
     background-color: #EFEDDC;
 	-moz-border-radius: 15px;
 	border-radius: 15px;
 }
-#lobbyPanel {
+
+#lobby {
     padding: 10px;
     display: none;
 }
-#loginPanel {
+
+#login {
     padding: 10px;
-}
-#nickField {
-    margin-left: 206px;
-}
-#infoArea{
-    color:#666;
-    font-size:14px;
-    -moz-border-radius: 8px; -webkit-border-radius: 8px;
-    margin:5px 0px 10px 0px;
-    padding:10px;
-    height:75px;
-    width:600px;
-    border:#999 1px solid;
-    margin-left: 10px;
-    transition: all 0.25s ease-in-out;
-    -webkit-transition: all 0.25s ease-in-out;
-    -moz-transition: all 0.25s ease-in-out;
-    box-shadow: 0 0 5px rgba(81, 203, 238, 0);
-    -webkit-box-shadow: 0 0 5px rgba(81, 203, 238, 0);
-    -moz-box-shadow: 0 0 5px rgba(81, 203, 238, 0);
+    display: none;
 }
 
-#infoArea:focus{
-    color:#000;
-    outline:none;
-    border:#35a5e5 1px solid;
-    box-shadow: 0 0 5px rgba(81, 203, 238, 1);
-    -webkit-box-shadow: 0 0 5px rgba(81, 203, 238, 1);
-    -moz-box-shadow: 0 0 5px rgba(81, 203, 238, 1);
+#nick {
+    margin-left: 206px;
 }
+
+
 #fpsLabel {
     padding-left: 20px;
 }
+
 .body {
     position: absolute;
     width: 16px;
     height: 16px;
 }
+
 .player { 
     z-index: 2;
     width: 18px;
     height: 22px;
 }
+
 label {
     display: block;
     margin: 10px;
 }
+
 input {
     padding: 5px;
     margin: 10px;
@@ -93,12 +79,14 @@ input {
     box-shadow:  1px 1px 0px #efefef;
     display: block;
 }
+
 input:focus {
     -webkit-box-shadow: 0px 0px 5px #007eff;
     -moz-box-shadow: 0px 0px 5px #007eff;
     box-shadow: 0px 0px 5px #007eff;
 }
-button{
+
+button {
     margin: 10px;
     background: #c63929;
     background: -moz-linear-gradient(0% 100% 90deg, #891100 0%, #B51700 50%, #c63929 50%, #EE432E 100%);
